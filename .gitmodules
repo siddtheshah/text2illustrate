@@ -1,0 +1,3 @@
+[submodule "neuralcoref"]
+	path = neuralcoref
+	url = https://github.com/huggingface/neuralcoref.git

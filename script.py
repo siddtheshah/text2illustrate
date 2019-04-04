@@ -2,6 +2,7 @@
 from stanfordcorenlp import StanfordCoreNLP
 from collections import defaultdict
 import spacy
+from spacy.lemmatizer import Lemmatizer
 
 
 
@@ -14,6 +15,7 @@ class Entity:
         self.baseVerbs = []             # can't be used for image base w/o search
         self.preps = []
         self.objs = []
+        self.ne_annotation = None
 
     # def __eq__(self, other):
     #     if isinstance(other, Entity):
@@ -21,8 +23,8 @@ class Entity:
     #     return False
 
     def __repr__(self):
-        return '\n<\n\t{0}\n\t{1}\n\t{2}\n\t{3}\n\t{4}\n>'.format(
-            self.text, self.adjectives, self.baseVerbs, self.preps, [obj.text for obj in self.objs])
+        return '\n<\n\ttext: {0}\n\tadjectives: {1}\n\tbaseVerbs: {2}\n\tpreps: {3}\n\tobjs: {4}\n\tne_ann: {5}\n>'.format(
+            self.text, self.adjectives, self.baseVerbs, self.preps, [obj.text for obj in self.objs], self.ne_annotation)
 
 class Setting(Entity):
     # A setting entity is implicitly added to every sentence. 
@@ -75,77 +77,94 @@ class Script:
         self.spacy = spacy.load('en_core_web_sm')
         self.rawText = None
         self.sentences = None
-        self.sentenceEntitySet = None
         self.text2ent = defaultdict(None)
+        self.lemmatizer = Lemmatizer()
+
 
     def processEntities(self, text):
         self.rawText = text
         doc = self.spacy(text)
         self.sentences = list(doc.sents)
+        self.allNamedEnts = list(set([e.text for e in doc.ents]))
 
-        raw = self.nlp.get_raw('ner', text)
-        # print(raw)
+        ner_raw = self.nlp.get_raw('ner', text)
+        # print(ner_raw)
+        # ner = self.nlp.ner(text)
+        # print(ner)
         extractedRelations = self.nlp.openie(text)
         # self.nlp.show_raw('openie', text)
 
         # print(extractedRelations)
         coref_raw = self.nlp.get_raw('coref', text)
         representativeMentionsDict = {}
+
+
         for co_id, chain in coref_raw['corefs'].items():
             # co is a list
             # print(chain)
             representative = list(filter(lambda x: x['isRepresentativeMention'] == True, chain))[0]
-            val = representative['text']
+            noun = representative['text']
+
+            # extract root noun if the whole phrase is not a named entity.
+            if noun not in self.allNamedEnts:
+                tokens = self.nlp.pos_tag(noun)
+                for word, tag in tokens:
+                    if tag[0:2] == "NN":
+                        noun = word.lower() #self.nlp.lemma(word)[0][1]
             for ref in chain:
-                representativeMentionsDict[(ref['text'], ref['sentNum'], ref['startIndex'], ref['endIndex'])] = val
+                print(ref)
+                # I'm as clueless as you when it comes to why endIndex is messed up
+                representativeMentionsDict[(ref['text'], ref['sentNum'], ref['startIndex'], ref['endIndex'])] = noun
 
+        print(representativeMentionsDict)
         # Syntactical Entites are represented as (text, sentence#, [spanStart, spanEnd])
-
-
         #self.sentences = self.nlp.openie(text)
 
         sentenceEntityLists = []
+        namedEnts = []
 
 
         for k, sentence in enumerate(self.sentences):
-            nameSet = set()
             pos_tags = self.nlp.pos_tag(sentence.text)
             # print(pos_tags)
-            sentenceEntityList = []
+            entStrings = set()
             sendoc = self.spacy(sentence.text)
 
-            namedEnts = [e.text for e in sendoc.ents]
-            # sentenceEntityList.extend([Entity(textEnt) for textEnt in namedEnts])
-            textEnts = namedEnts
-            print(namedEnts)
+            namedEnts.extend([e.text for e in sendoc.ents])
+            # print(namedEnts)
             # Replace with stanford impl.
             for np in sendoc.noun_chunks:
+                # print(np.root)
+                # print(list(np.root.children))
+                adjToks = list(filter(lambda x: x.pos_ == "ADJ", list(np.root.children)))
+                adjectives = [tok.lemma_ for tok in adjToks]
+                # print(adjectives)
+                ne_annotation = {}
                 if np.text in namedEnts:
                     textEnt = np.text
                 else:
-                    syntacticalRep = (np.text, k+1, np.start +1 , np.end + 1)
-                    # print(syntacticalRep)
+                    syntacticalRep = (np.root.text, k+1, np.start +1 , np.end + 1)
+                    print(syntacticalRep)
                     if syntacticalRep in representativeMentionsDict:
                         textEnt = representativeMentionsDict[syntacticalRep]
                     else:
                         textEnt = np.root.text
                 entity = Entity(textEnt)
-                debug = entity.text
+                entString = entity.text
+                entity.adjectives = adjectives
+                if entString not in entStrings:
+                    self.text2ent[entString] = entity # May or may not cause issues
+                    entStrings.add(entString)                    
 
-                self.text2ent[debug] = entity
-                if entity not in sentenceEntityList:
-                    sentenceEntityList.append(self.text2ent[debug])                    
-
-            print(sentenceEntityList)
             # print(extractedRelations[k])
+
             unduplicated = []
             for subj, verb, obj in extractedRelations[k]:
-
-                if subj in representativeMentionsDict:
+                if subj[0] not in self.allNamedEnts and subj in representativeMentionsDict:
                     resolvedSubjectString = representativeMentionsDict[subj]
                 else:
                     resolvedSubjectString = subj[0] 
-                if obj in representativeMentionsDict:
+                if obj[0] not in self.allNamedEnts and obj in representativeMentionsDict:
                     resolvedObjectString = representativeMentionsDict[obj]
                 else:
                     resolvedObjectString = obj[0]
@@ -166,13 +185,10 @@ class Script:
                 if resolvedSubjEntity:
                     if resolvedObjEntity:
                         wordTags = self.nlp.pos_tag(verb)
-                        # print(wordTags)
-                        bv = ""
+                        bv = verb
                         prep = ""
 
                         for word, tag in wordTags:
-                            # print(tag[0:2])
-                            # print(word[0:1])
                             if tag[0:2] == "VB":
                                 bv = self.nlp.lemma(word)[0][1]
                             elif tag[0:2] == "IN" or tag[0:2] == "TO":
@@ -183,31 +199,49 @@ class Script:
                             resolvedSubjEntity.baseVerbs.append(bv)
                             resolvedSubjEntity.objs.append(resolvedObjEntity)
                             unduplicated.append(triple)
+                    else:
+                        print("Unresolved ObjEntity")
+                else:
+                    print("Unresolved SubjEntity")
 
 
-            
-            #print(current_aliases)
-            #print(svoTriples)
-            print("EntityList:")
-            print(sentenceEntityList)
-            print("-------------------------------------------------")
+            sentenceEntityList = list(self.text2ent[text] for text in entStrings).copy()
+
+            # print("EntityList:")
+            # print(sentenceEntityList)
+            # print("-------------------------------------------------")
 
             sentenceEntityLists.append(sentenceEntityList)
 
         self.sentenceEntityLists = sentenceEntityLists # We now have entities in each sentence
-
-        # for enSet in sentenceEntitySets:
-        #     print(enSet)
-
-    def GroupSentencesByEntities(self):
-        #cursor = Cursor(self.sentenceEntitySet)
-
-        #for sentence, entitySet in zip(self.sentences, self.sentence):
-        pass
-
-        
+        print(self.sentenceEntityLists)
 
 
+    def CreateContinuum(self):
+        previousDict = {}
+        self.continuum = []
+        for index, sentenceEntityList in enumerate(self.sentenceEntityLists):
+            currentTexts = set([entity.text for entity in sentenceEntityList])
+            prevTexts = previousDict.keys()
+            displayed = []
+            if len(set(prevTexts).intersection(currentTexts)) == 0:
+                previousDict = {} # If nothing's retained, blank slate
+            else:
+                popList = []
+                for text, entityTiming in previousDict.items():
+                    if index - entityTiming[1] > 1:
+                        popList.append(text)
+                for text in popList:
+                    previousDict.pop(text, None) 
+
+            for entity in sentenceEntityList:
+                previousDict[entity.text] = (entity, index) # Overwrites old versions if present
+            for entityText in previousDict:
+                displayed.append(previousDict[entityText][0])
+            self.continuum.append(displayed.copy())
+        print(self.continuum)
+        # Don't carry over entities that 
+    
     def readFromFile(self, file):
         data = open(file).read()
         process(data)
@@ -222,8 +256,10 @@ class Script:
             for word, tag in wordTags:
                 #print(word[0:1])
                 if tag[0:2] == "NN":
-                    reduceString = word
-                    break
+                    reduceString = self.lemmatizer(word, "NOUN")[0]
+                    print("Reduced: " + reduceString)  
+                    return reduceString
+            reduceString = inp
         print("Reduced: " + reduceString)           
         return reduceString
 
@@ -231,12 +267,26 @@ class Script:
 
 
 if __name__ == "__main__":
+    s = Script()
+    s.processEntities("Bob dropped the wrench onto the floor. "
+        + "It made a loud clang, and Andy yelped in surprise. "
+        + "He then broke the window. Johnny grabbed the broom and dustpan. ")
 
-    # s = Script().processEntities("Bob dropped the wrench onto the floor."
-    #     + "It made a loud clang, and Andy yelped in surprise. "
-    #     + "He then broke the window. Johnny grabbed the broom and dustpan. ")
-
-    # s = Script().processEntities("Bob dropped the wrench onto the floor. He kept walking toward the hallway, not caring.")
+    # s.processEntities("Bob dropped the wrench onto the floor. He kept walking toward the hallway, not caring.")
     # s = Script().processEntities("Rocks fell from the sky. Leanne's friends scrambled to dodge the incoming stones.")
-    s = Script().processEntities("Melvin rode a bike to the mall.")
     
+    # s.processEntities("The nimble rabbit jumped over the log. The fox chased it relentlessly.")
+    
+    # Named entity tests
+    # s = Script().processEntities("John Marston walked down the dusty road. A lonely cactus greeted him.")
+    # s.processEntities("Bob was chewing on some apples. Andy wanted to share them. He was getting annoyed, so he left the room")
+
+    # adjective tests
+    # s = Script().processEntities("The nimble rabbit jumped over the log.")
+    # s = Script().processEntities("The cat was small.")
+
+    # Blank slating
+    # s.processEntities("The nimble rabbit jumped over the log. The fox turned and chased the chicken instead.")
+    
+    print("Continuum: ")
+    s.CreateContinuum()

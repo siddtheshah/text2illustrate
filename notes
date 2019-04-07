@@ -23,13 +23,39 @@ vim /home/siddhant/.local/lib/python3.6/site-packages/stanfordcorenlp/corenlp.py
 Things to do:
 - Improve the processText_v2 script
     > Want to handle adjectives of the form "A was/is B", where B is an adjective
-    > Is necessary for descriptive sentences. "A was above B"
-    > Need to set up named entity data. Use Stanford NLP person/place/gender/animacy
+    > Is necessary for descriptive sentences. "A was above B" <DONE>
+    > Need to set up named entity data. Use Stanford NLP person/place/gender/anima DONE!
+    > Reflexive verbs
+    > ~DONE~
+    > Check seems relations
+    > Make script verbs resolved endpoints, then map them to imageable.
 - Set up script reduce
     > Figure out how to conjoin the script.
-    > Script continuum done. <Kindof>
+    > Script continuum done. <Kindof DONE>
 - Set up setting info
     > Create default unresolved terms like "It" and "There"
     > Goal is to be able to handle "It was raining"
 - Set up default positions.
 
+Demo requirements:
+    > Can mock up the database
+    > Need to set up UI at minimum
+    > UI plan
+    > Presentation plan
+        > Create a video using a screen capture
+        > Use Windows+G on VB window to begin a screen cap
+        > Present to TAs
+
+
+Project install plan:
+    > Install Corenlp as a docker
+    > Run it as docker on port 9000
+    > Create a fork of python module stanfordcorenlp
+    > add that to git
+    > add installation script.
+        > apt install python3
+        > pip install <fork>
+        > pip install spacy
+        > pip install nltk
+        > apt install python3-tk
+        > pip install opencv-python

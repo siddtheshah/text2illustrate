@@ -3,6 +3,26 @@ import nltk
 from nltk.corpus import wordnet as wn
 from nltk.stem import WordNetLemmatizer
 
+# Verb Endpoints
+MOTION_SELF = ["run", "walk", "jump", "go", "move"]
+MOTION_OTHER = ["throw", "push", "pull", "carry"]
+STATIONARY = ["rest", "sit", "stand"]
+SPEAK = ["say", "scream", "whisper"]
+USAGE = ["use", "create", "destroy"]
+REGARD = ["examine", "see"]
+BEING = ["is", "seem"]
+
+# Adjective Endpoints
+SIZE = ["small", "big", "wide", "thin", "short"]
+COLOR = ["light", "dark", "colorful"]
+AGE = ["young", "old"]
+EMOTION = ["happy", "sad", "angry", "scared", "thoughtful"]
+VOLUME = ["loud", "quiet"]
+QUALITY = ["great", "terrible"]
+SPEED = ["slow", "fast"]
+TEXTURE = ["smooth", "sharp", "straight"]
+RIGHTEOUSNESS = ["benevolent", "evil"]
+
 class EndpointResolver:
 
     def __init__(self, pos, endpoints):
@@ -12,29 +32,36 @@ class EndpointResolver:
 
     def resolveWordToEndpointsBFS(self, word, limit=100):
         # Brute force search over synonym graph. 
+
+        endpointSet = set(self.endpoints)
+        lemCurrent = self.lemmatizer.lemmatize(word.split("_")[0])
+        if lemCurrent in endpointSet:
+            return lemCurrent
+
         seen = set()
         toExplore = [word]
         nextLevel = []
         nextLevelSet = set()
-        endpointSet = set(self.endpoints)
         exploreCount = 0
-
+        
         while exploreCount < limit and len(toExplore) > 0:
             current = toExplore.pop(0)
             if current not in seen:
                 seen.add(current)
                 current = self.lemmatizer.lemmatize(current)
                 # print(current)
-                if current in endpointSet:
-                    return current
+                lemCurrent = current.split("_")[0]
+                if lemCurrent in endpointSet:
+                    return lemCurrent
                 syns = wn.synsets(current)
                 trimmedByPOS = list(filter(lambda x: x.pos() in self.pos, syns))
                 synLems = [l.name() for s in trimmedByPOS for l in s.lemmas()]
                 print("Current:", current, ":", synLems)
-                unseen = set(filter(lambda x: x not in seen, synLems))
-                unseenList = list(filter(lambda x: x not in seen, synLems))
-                nextLevelSet |= unseen
+                # unseen = set(filter(lambda x: x not in seen, synLems))
+                unseenList = list(filter(lambda x: x not in seen, synLems))[:7]
+                unseen = set(unseenList)
                 nextLevel += unseenList
+                nextLevelSet |= unseen
                 #  print("Current:", current, ":", unseenList)
             if len(toExplore) == 0:
                 toExplore = nextLevel
@@ -46,28 +73,29 @@ class EndpointResolver:
 
     def resolveWordToEndpointsLCH(self, word):
         syns = wn.synsets(word)
-        trimmedByPOS = list(filter(lambda x: x.pos() == self.pos, syns))
+        trimmedByPOS = list(filter(lambda x: x.pos() in self.pos, syns))
         max_sim = 0
         best_match = None
         for end in self.endpoints:
             endSyns = wn.synsets(end)
-            endTrimmed = list(filter(lambda x: x.pos() == self.pos, endSyns))
+            endTrimmed = list(filter(lambda x: x.pos() in self.pos, endSyns))
             for et in endTrimmed:
                 for baseSyn in trimmedByPOS:
-                    similarity = baseSyn.lch_similarity(et)
-                    if similarity > max_sim:
-                        max_sim = similarity
-                        best_match = end
+                    if baseSyn.pos() == et.pos():
+                        similarity = baseSyn.lch_similarity(et)
+                        if similarity > max_sim:
+                            max_sim = similarity
+                            best_match = end
         return best_match
 
     def resolveWordToEndpointsWUP(self, word):
         syns = wn.synsets(word)
-        trimmedByPOS = list(filter(lambda x: x.pos() == self.pos, syns))
+        trimmedByPOS = list(filter(lambda x: x.pos() in self.pos, syns))
         max_sim = 0
         best_match = None
         for end in self.endpoints:
             endSyns = wn.synsets(end)
-            endTrimmed = list(filter(lambda x: x.pos() == self.pos, endSyns))
+            endTrimmed = list(filter(lambda x: x.pos() in self.pos, endSyns))
             for et in endTrimmed:
                 for baseSyn in trimmedByPOS:
                     similarity = baseSyn.wup_similarity(et)
@@ -80,46 +108,31 @@ class VerbResolver(EndpointResolver):
     def __init__(self):
         self.lemmatizer = WordNetLemmatizer()
         self.pos = ['v']
-        motion_self = ["run", "walk", "jump"]
-        motion_other = ["throw", "push", "pull", "carry"]
-        stationary = ["rest", "sit", "stand"]
-        speak = ["say", "scream", "whisper"]
-        usage = ["use"]
-        regard = ["examine", "look", "see"]
-        being = ["is"]
-        endpoints = motion_self + motion_other + stationary + speak + regard + being
+        endpoints = MOTION_SELF + MOTION_OTHER + STATIONARY + SPEAK + REGARD + BEING + USAGE
         self.endpoints = [self.lemmatizer.lemmatize(end) for end in endpoints]
 
-    def resolve(word):
+    def resolve(self, word):
         return self.resolveWordToEndpointsLCH(word)
 
 class AdjectiveResolver(EndpointResolver):
     def __init__(self):
         self.lemmatizer = WordNetLemmatizer()
         self.pos = ['a','s']
-        size = ["small", "big", "wide", "thin", "short"]
-        color = ["light", "dark", "colorful"]
-        age = ["young", "old"]
-        emotion = ["happy", "sad", "angry", "scared", "thoughtful"]
-        volume = ["loud", "quiet"]
-        quality = ["great", "terrible"]
-        speed = ["slow", "fast"]
-        texture = ["smooth", "sharp", "straight"]
-        righteousness = ["benevolent", "evil"]
-        endpoints = size + color + age + emotion + volume + quality + speed + texture + righteousness
+        
+        endpoints = SIZE + COLOR + AGE + EMOTION + VOLUME + QUALITY + SPEED + TEXTURE + RIGHTEOUSNESS
         self.endpoints = [self.lemmatizer.lemmatize(end) for end in endpoints]
 
-    def resolve(word):
-        return self.resolveWordToEndpointsWUP(word)
+    def resolve(self, word):
+        return self.resolveWordToEndpointsBFS(word)
 
 if __name__ == "__main__":
     resolver = AdjectiveResolver()
-    testWord = "grand"
+    testWord = "Grumpy"
 
     result1 = resolver.resolveWordToEndpointsBFS(testWord, 100)
     if result1:
         print("BFS: " + result1)
 
-    result2 = resolver.resolveWordToEndpointsWUP(testWord)
-    if result2:
-        print("WUP: " + result2)
+    # result2 = resolver.resolveWordToEndpointsLCH(testWord)
+    # if result2:
+    #     print("LCH: " + result2)

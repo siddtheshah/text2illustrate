@@ -3,28 +3,14 @@ from stanfordcorenlp import StanfordCoreNLP
 from collections import defaultdict
 import spacy
 from spacy.lemmatizer import Lemmatizer
+from entity import Entity
+from endpointResolver import *
 
 
 
 # Scenes are composed of entities, which will be passed to ImageComposer
 
-class Entity:
-    def __init__(self, phrase):
-        self.text = phrase
-        self.adjectives = []           # not usable without search integration
-        self.baseVerbs = []             # can't be used for image base w/o search
-        self.preps = []
-        self.objs = []
-        self.ne_annotation = None
 
-    # def __eq__(self, other):
-    #     if isinstance(other, Entity):
-    #         return self.text == other.text     # Entity is the same if the roots match
-    #     return False
-
-    def __repr__(self):
-        return '\n<\n\ttext: {0}\n\tadjectives: {1}\n\tbaseVerbs: {2}\n\tpreps: {3}\n\tobjs: {4}\n\tne_ann: {5}\n>'.format(
-            self.text, self.adjectives, self.baseVerbs, self.preps, [obj.text for obj in self.objs], self.ne_annotation)
 
 class Setting(Entity):
     # A setting entity is implicitly added to every sentence. 
@@ -79,6 +65,8 @@ class Script:
         self.sentences = None
         self.text2ent = defaultdict(None)
         self.lemmatizer = Lemmatizer()
+        self.adjResolver = AdjectiveResolver()
+        self.verbResolver = VerbResolver()
 
 
     def processEntities(self, text):
@@ -87,35 +75,66 @@ class Script:
         self.sentences = list(doc.sents)
         self.allNamedEnts = list(set([e.text for e in doc.ents]))
 
+        ent_types = {}
+        for mention in doc.ents:
+            ent_types[mention.text] = mention.label_
+
+        # dco_raw = self.nlp.get_raw('dcoref', text)
+        # print(dco_raw)
+
         ner_raw = self.nlp.get_raw('ner', text)
-        # print(ner_raw)
-        # ner = self.nlp.ner(text)
-        # print(ner)
         extractedRelations = self.nlp.openie(text)
+        # print(ner_raw)
         # self.nlp.show_raw('openie', text)
 
         # print(extractedRelations)
         coref_raw = self.nlp.get_raw('coref', text)
         representativeMentionsDict = {}
+        neAnnotationDict = {}
 
+        dcoref_raw = self.nlp.get_raw('dcoref', text)
+        for co_id, chain in dcoref_raw['corefs'].items(): # For sentences with no coref
+            representative = list(filter(lambda x: x['isRepresentativeMention'] == True, chain))[0]
+            noun = representative['text']
+            # extract root noun if the whole phrase is not a named entity.
+            if noun not in self.allNamedEnts:
+                tokens = self.nlp.pos_tag(noun)
+                for word, tag in tokens:
+                    if tag[0:2] == "NN":
+                        noun = word.lower()
+            ref = chain[0]
+            named_info = {}
+            named_info['number'] = ref['number']
+            named_info['gender'] = ref['gender']
+            named_info['animacy'] = ref['animacy']
+            if noun in self.allNamedEnts:
+                named_info['type'] = ent_types[noun]
+            neAnnotationDict[noun] = named_info
 
         for co_id, chain in coref_raw['corefs'].items():
             # co is a list
             # print(chain)
             representative = list(filter(lambda x: x['isRepresentativeMention'] == True, chain))[0]
             noun = representative['text']
-
             # extract root noun if the whole phrase is not a named entity.
             if noun not in self.allNamedEnts:
                 tokens = self.nlp.pos_tag(noun)
                 for word, tag in tokens:
                     if tag[0:2] == "NN":
-                        noun = word.lower() #self.nlp.lemma(word)[0][1]
+                        noun = word.lower()
+            ref = chain[0]
+            named_info = {}
+            named_info['number'] = ref['number']
+            named_info['gender'] = ref['gender']
+            named_info['animacy'] = ref['animacy']
+            if noun in self.allNamedEnts:
+                named_info['type'] = ent_types[noun]
+            neAnnotationDict[noun] = named_info
             for ref in chain:
                 print(ref)
-                # I'm as clueless as you when it comes to why endIndex is messed up
                 representativeMentionsDict[(ref['text'], ref['sentNum'], ref['startIndex'], ref['endIndex'])] = noun
 
+        print(neAnnotationDict)
         print(representativeMentionsDict)
         # Syntactical Entites are represented as (text, sentence#, [spanStart, spanEnd])
         #self.sentences = self.nlp.openie(text)
@@ -132,10 +151,13 @@ class Script:
 
             namedEnts.extend([e.text for e in sendoc.ents])
             # print(namedEnts)
+
+            # Gathered all entities from the sentence. Make sure named entities are
+            # not duplicated or lemmatized
             # Replace with stanford impl.
             for np in sendoc.noun_chunks:
-                # print(np.root)
-                # print(list(np.root.children))
+                print(np.root)
+                print(list(np.root.children))
                 adjToks = list(filter(lambda x: x.pos_ == "ADJ", list(np.root.children)))
                 adjectives = [tok.lemma_ for tok in adjToks]
                 # print(adjectives)
@@ -150,6 +172,8 @@ class Script:
                     else:
                         textEnt = np.root.text
                 entity = Entity(textEnt)
+                if textEnt in neAnnotationDict:
+                    entity.ne_annotation = neAnnotationDict[textEnt]
                 entString = entity.text
                 entity.adjectives = adjectives
                 if entString not in entStrings:
@@ -158,51 +182,61 @@ class Script:
 
             # print(extractedRelations[k])
 
+            # Attach relationships to entities. Only annotates verbs that resolve
+            # Most should, since there is taxonomy of verbs and LCH is pretty good.
             unduplicated = []
             for subj, verb, obj in extractedRelations[k]:
-                if subj[0] not in self.allNamedEnts and subj in representativeMentionsDict:
-                    resolvedSubjectString = representativeMentionsDict[subj]
-                else:
-                    resolvedSubjectString = subj[0] 
-                if obj[0] not in self.allNamedEnts and obj in representativeMentionsDict:
-                    resolvedObjectString = representativeMentionsDict[obj]
-                else:
-                    resolvedObjectString = obj[0]
-                print("Resolved:")
-                print(resolvedSubjectString)
-                print(verb)
-                print(resolvedObjectString)
+                wordTags = self.nlp.pos_tag(verb)
+                prep = ""
 
-                reducedSubjString = self.getReduceString(namedEnts, resolvedSubjectString)
-                reducedObjString = self.getReduceString(namedEnts, resolvedObjectString)
-                resolvedSubjEntity = None
-                resolvedObjEntity = None
-                if reducedSubjString in self.text2ent:
-                    resolvedSubjEntity = self.text2ent[reducedSubjString]
-                if reducedObjString in self.text2ent:
-                    resolvedObjEntity = self.text2ent[reducedObjString]
+                for word, tag in wordTags:
+                    if tag[0:2] == "VB":
+                        verb = self.nlp.lemma(word)[0][1]
+                    elif tag[0:2] == "IN" or tag[0:2] == "TO":
+                        prep = self.nlp.lemma(word)[0][1]
 
-                if resolvedSubjEntity:
-                    if resolvedObjEntity:
-                        wordTags = self.nlp.pos_tag(verb)
-                        bv = verb
-                        prep = ""
-
-                        for word, tag in wordTags:
-                            if tag[0:2] == "VB":
-                                bv = self.nlp.lemma(word)[0][1]
-                            elif tag[0:2] == "IN" or tag[0:2] == "TO":
-                                prep = self.nlp.lemma(word)[0][1]
-                        triple = (prep, bv, resolvedObjEntity.text)
-                        if triple not in unduplicated:
-                            resolvedSubjEntity.preps.append(prep)
-                            resolvedSubjEntity.baseVerbs.append(bv)
-                            resolvedSubjEntity.objs.append(resolvedObjEntity)
-                            unduplicated.append(triple)
+                bv = self.verbResolver.resolve(verb)
+                if bv:
+                    if subj[0] not in self.allNamedEnts and subj in representativeMentionsDict:
+                        resolvedSubjectString = representativeMentionsDict[subj]
                     else:
-                        print("Unresolved ObjEntity")
+                        resolvedSubjectString = subj[0] 
+                    if obj[0] not in self.allNamedEnts and obj in representativeMentionsDict:
+                        resolvedObjectString = representativeMentionsDict[obj]
+                    else:
+                        resolvedObjectString = obj[0]
+                    print("Resolved:")
+                    print(resolvedSubjectString)
+                    print(bv)
+                    print(resolvedObjectString)
+
+                    reducedSubjString = self.getReduceString(namedEnts, resolvedSubjectString)
+                    reducedObjString = self.getReduceString(namedEnts, resolvedObjectString)
+                    resolvedSubjEntity = None
+                    resolvedObjEntity = None
+                    if reducedSubjString in self.text2ent:
+                        resolvedSubjEntity = self.text2ent[reducedSubjString]
+                    if reducedObjString in self.text2ent:
+                        resolvedObjEntity = self.text2ent[reducedObjString]
+
+                    if resolvedSubjEntity:
+                        if resolvedObjEntity:
+                            quadruple = (resolvedSubjEntity.text, prep, bv, resolvedObjEntity.text)
+                            if quadruple not in unduplicated:
+                                resolvedSubjEntity.preps.append(prep)
+                                resolvedSubjEntity.baseVerbs.append(bv)
+                                resolvedSubjEntity.objs.append(resolvedObjEntity)
+                                unduplicated.append(quadruple)
+                        elif bv in ["is", "seem"]:
+                            # Is-was <adj> relationship
+                            # reducedObjString is actually an adjective
+                            resolvedSubjEntity.adjectives.append(reducedObjString)
+                        else:
+                            print("Unresolved ObjEntity")
+                    else:
+                        print("Unresolved SubjEntity")
                 else:
-                    print("Unresolved SubjEntity")
+                    print("Unresolved Verb")
 
 
             sentenceEntityList = list(self.text2ent[text] for text in entStrings).copy()
@@ -214,7 +248,7 @@ class Script:
             sentenceEntityLists.append(sentenceEntityList)
 
         self.sentenceEntityLists = sentenceEntityLists # We now have entities in each sentence
-        print(self.sentenceEntityLists)
+        # print(self.sentenceEntityLists)
 
 
     def CreateContinuum(self):
@@ -240,7 +274,17 @@ class Script:
                 displayed.append(previousDict[entityText][0])
             self.continuum.append(displayed.copy())
         print(self.continuum)
-        # Don't carry over entities that 
+
+    def ResolveAdjectives(self):
+        for sentenceEntityList in self.sentenceEntityLists:
+            for entity in sentenceEntityList:
+                resolvedList = []
+                for adjective in entity.adjectives:
+                    resolved = self.adjResolver.resolve(adjective)
+                    if resolved:
+                        resolvedList.append(resolved)
+                entity.adjectives = resolvedList
+
     
     def readFromFile(self, file):
         data = open(file).read()
@@ -268,9 +312,9 @@ class Script:
 
 if __name__ == "__main__":
     s = Script()
-    s.processEntities("Bob dropped the wrench onto the floor. "
-        + "It made a loud clang, and Andy yelped in surprise. "
-        + "He then broke the window. Johnny grabbed the broom and dustpan. ")
+    # s.processEntities("Bob dropped the wrench onto the floor. "
+    #     + "It made a loud clang, and Andy yelped in surprise. "
+    #     + "He then broke the window. Johnny grabbed the broom and dustpan. ")
 
     # s.processEntities("Bob dropped the wrench onto the floor. He kept walking toward the hallway, not caring.")
     # s = Script().processEntities("Rocks fell from the sky. Leanne's friends scrambled to dodge the incoming stones.")
@@ -280,6 +324,7 @@ if __name__ == "__main__":
     # Named entity tests
     # s = Script().processEntities("John Marston walked down the dusty road. A lonely cactus greeted him.")
     # s.processEntities("Bob was chewing on some apples. Andy wanted to share them. He was getting annoyed, so he left the room")
+    s.processEntities("They were heading to the store.")
 
     # adjective tests
     # s = Script().processEntities("The nimble rabbit jumped over the log.")
@@ -288,5 +333,9 @@ if __name__ == "__main__":
     # Blank slating
     # s.processEntities("The nimble rabbit jumped over the log. The fox turned and chased the chicken instead.")
     
+    # Is/was relations
+    # s.processEntities("Barry saw them outside his window. They were tall, and menacing.")
+    # s.processEntities("The car is black.")
+
     print("Continuum: ")
     s.CreateContinuum()

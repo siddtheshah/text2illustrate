@@ -22,7 +22,8 @@ def sketchify(rawImage):
     # blurred = cv2.bilateralFilter(gray_inv, 9, 9, 9)
 
     blend = dodgeV2(gray, blurred)
-    return blend
+    normalized = cv2.normalize(blend, None, 0, 255, cv2.NORM_MINMAX)
+    return normalized
 
 if __name__ == "__main__":
     name = sys.argv[1]

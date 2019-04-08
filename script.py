@@ -109,6 +109,10 @@ class Script:
             named_info['animacy'] = ref['animacy']
             if noun in self.allNamedEnts:
                 named_info['type'] = ent_types[noun]
+            if named_info['gender'] not in ["UNKNOWN", "NEUTRAL"] and named_info["number"] == "SINGULAR":
+                # Stanford caught a human name that spacy did not.
+                named_info['type'] = "PERSON"
+                self.allNamedEnts.append(noun)
             neAnnotationDict[noun] = named_info
 
         for co_id, chain in coref_raw['corefs'].items():
@@ -238,6 +242,21 @@ class Script:
                 else:
                     print("Unresolved Verb")
 
+            # Entity merge handling.
+            absorbed = []
+            for text in entStrings:
+                subj = self.text2ent[text]
+                for bv, prep, obj in zip(subj.baseVerbs, subj.preps, subj.objs):
+                    if bv in ["is", "name"] and prep == "":
+                        if entity in namedEnts:
+                            subj.absorb(obj)
+                            absorbed.append(obj.text)
+                        else:
+                            obj.absorb(subj)
+                            absorbed.append(subj.text)
+
+            for text in absorbed:
+                entStrings.remove(text)
 
             sentenceEntityList = list(self.text2ent[text] for text in entStrings).copy()
 

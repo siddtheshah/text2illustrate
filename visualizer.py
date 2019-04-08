@@ -11,11 +11,11 @@ from threading import Lock, Thread
 CANVAS_WIDTH = 1200
 CANVAS_HEIGHT = 800
 
-TINY_WIDTH = 40
-TINY_HEIGHT = 40
+TINY_WIDTH = 100
+TINY_HEIGHT = 400
 
-SMALL_WIDTH = 120
-SMALL_HEIGHT = 120
+SMALL_WIDTH = 200
+SMALL_HEIGHT = 200
 
 MEDIUM_WIDTH = 400
 MEDIUM_HEIGHT = 400
@@ -35,7 +35,7 @@ class StaticVisualGraph:
         def __init__(self, entity):
             self.entity = entity
             self.isRoot = True
-            self.rootOffset = None
+            self.rootOffset = None # Define offsets to be vectors to CENTER of image
             self.otherOffsets = {}
             self.reverse = []
             self.onIsland = False
@@ -59,6 +59,7 @@ class StaticVisualGraph:
         self.map = {}
         for entity in entities:
             self.map[entity] = self.VisualNode(entity)
+            print(entity)
         for entity in entities:
             self.map[entity].forward = [self.map[obj] for obj in entity.objs]
         self.nodeList = self.map.values()
@@ -81,10 +82,10 @@ class StaticVisualGraph:
         for node in self.nodeList:
             for verb, prep, otherNode in zip(node.entity.baseVerbs, node.entity.preps, node.forward):
                 offset = self.SelectOffset(verb, prep)
-                if not node.entity.eImage:
+                if not (node.entity.eImage.image is not None and otherNode.entity.eImage.image is not None):
                     offset*= SMALL_WIDTH
                 else:
-                    offset*= node.entity.eImage.image.shape[0]
+                    offset*= (node.entity.eImage.image.shape[0] + otherNode.entity.eImage.image.shape[0])/2
                 if offset[2] > 0: 
                     offset[2] = 1
                 elif offset[2] < 0:
@@ -93,22 +94,22 @@ class StaticVisualGraph:
                 otherNode.otherOffsets[node] = -1*offset #graph is now bidirectional
 
     def SelectOffset(self, verb, prep):
-        offset = np.array([0, 0, 0])
+        offset = np.array([0.0, 0.0, 0.0])
 
         if prep:
             # Things look inverted because we want the object's relation to us.
             if prep in ["below", "beneath", "under"]: # object is above us, etc
-                offset = np.array([0, 1, 1])
+                offset = np.array([0.0, .2, 1.0])
             elif prep in ["with", "to", "at", "before"]: # we're at object. push it back a layer
-                offset = np.array([1, 0, -1])
-            elif prep in ["in", "inside", "into", "within"]: #object in foreground
-                offset = np.array([0, 0, 1])
+                offset = np.array([1.0, 0.0, -1.0])
+            elif prep in ["in", "inside", "into", "within"]: # object in foreground
+                offset = np.array([0.0, 0.0, 1.0])
             elif prep in ["beside", "near", "outside"]: # object nearby, we're more important
-                offset = np.array([1, 0, -1]) 
+                offset = np.array([1.0, 0.0, -1.0]) 
             elif prep in ["over", "above", "atop", "on", "onto", "upon"]: # object beneath us
-                offset = np.array([0, -1, -1])
+                offset = np.array([0.0, -.2, -1.0])
             else:
-                offset = np.array([1, 0, 1]) # idk
+                offset = np.array([1.0, 0.0, 1.0]) # idk
         return offset
 
     def CreateIslands(self):
@@ -160,7 +161,7 @@ class StaticVisualGraph:
 
     def ArrangeIslands(self):
         # Naive pack horizontally
-        width_margin = 100
+        width_margin = 200
         height_margin = 100
         filled_width = width_margin + sum([width_margin + island.getDimensions()[0] for island in self.islands])
         horizontal_unit = CANVAS_WIDTH/filled_width
@@ -174,11 +175,13 @@ class StaticVisualGraph:
             grid_col += width_margin
             root_col = grid_col + island.leftExtent
             for node in island.nodes:
-                if node.entity.eImage:
-                    node.entity.eImage.x = (root_col + node.rootOffset[0])*horizontal_unit
-                    node.entity.eImage.y = (root_row - node.rootOffset[1])*vertical_unit # left-down
+                if node.entity.eImage.image is not None:
+                    node.entity.eImage.x = (root_col + node.rootOffset[0])*horizontal_unit - node.entity.eImage.image.shape[0]/2
+                    node.entity.eImage.y = (root_row - node.rootOffset[1])*vertical_unit - node.entity.eImage.image.shape[1]/2
                     node.entity.eImage.layer = node.rootOffset[2]
             grid_col += island.getDimensions()[0]
+        print("================ ARRANGED ISLANDS =====================")
+        print([island.root.entity for island in self.islands])
 
 
 
@@ -192,17 +195,22 @@ class Visualizer:
         self.height = height
         self.assetBook = AssetBook()
         self.script = Script()
-        self.visualScript = []
+        self.visualScript = []        
+        # self.lock_ = Lock()
+
 
     def DrawStoryWithCallback(self, textBody, callBackFunc):
         self.GetAssets(textBody)
         self.StreamScenes(callBackFunc)
+        print("Finished stream")
         self.visualScript = []
+        self.script = Script()
 
     def GetAssets(self, textBody):
         self.script.processEntities(textBody)
         self.script.ResolveAdjectives()
         self.script.CreateContinuum()
+        print("============== VISUALIZER ==============")
         self.visualScript = self.script.continuum
         for entityList in self.visualScript:
             for entity in entityList:
@@ -211,19 +219,21 @@ class Visualizer:
                     print("Could not find image for entity: " + entity.text)
 
     def StreamScenes(self, callBackFunc):
+        # self.lock_.acquire()
         for entityList in self.visualScript:
+            # print(entityList)
             self.ArrangeStaticScene(entityList)
-            for entity in entityList:
-                staticShow(entity)
             # self.ArrangeDynamicScene(entityList)
 
             callBackFunc(entityList) # Should add in asynchronous processing here
+
+        # self.lock_.release()
 
     def SetDefaultSizes(self, entitiesWithImage):
         # Here we're going to use some awful logic to determine default size.
         # Replace with look up on Vignet data.
         for entityWithImage in entitiesWithImage:
-            if entityWithImage.eImage:
+            if entityWithImage.eImage.image is not None:
                 cv2_image = entityWithImage.eImage.image
 
                 resize_width = SMALL_WIDTH
@@ -270,7 +280,13 @@ def staticShow(entity):
     else:
         print(entity.eImage)
 
+def staticShowMultiple(entityList):
+    for entity in entityList:
+        staticShow(entity)
+
 if __name__ == "__main__":
     v = Visualizer()
-    textBody = ("Martin and Sally were standing on a box.")
-    v.DrawStoryWithCallback(textBody, None)
+    textBody = ("The store was having a sale today. Kevin decided to check it out.")
+    v.DrawStoryWithCallback(textBody, staticShowMultiple)
+    # textBody = "The cat sat near the man."
+    # v.DrawStoryWithCallback(textBody, staticShowMultiple)

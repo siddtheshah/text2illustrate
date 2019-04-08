@@ -77,6 +77,9 @@ class AssetBook:
             else:
                 pencil_image = None
         entity.eImage = EntityImage(pencil_image)
+        # print(entity.eImage.image.shape[:2])
+        # cv2.imshow("fuck you", entity.eImage.image)
+        # cv2.waitKey(0)
         # more complex logic for image retrieval
 
     def getRawImage(self, entity):
@@ -93,7 +96,10 @@ class AssetBook:
         if file.is_file():
             return imread("images/" + file_title + ".png")
         else:
-            return None
+            return imread("images/placeholder.png")
 
-
-        
+# if __name__ == "__main__":
+    # entity = Entity()
+    # entity.text = "dog"
+    # ast = AssetBook()
+    # ast.attachImageToEntity(entity)

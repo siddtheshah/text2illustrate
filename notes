@@ -59,3 +59,4 @@ Project install plan:
         > pip install nltk
         > apt install python3-tk
         > pip install opencv-python
+        > pip install resettabletimer

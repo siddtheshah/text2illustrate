@@ -6,7 +6,7 @@ do
 		echo $pic
 		y=${pic%.*}
 		base=${y##*/}
-		convert $pic "images/$base.png"
+		convert $pic -transparent white "images/$base.png"
 		rm -f $pic
 	fi
 done

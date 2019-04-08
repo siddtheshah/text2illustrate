@@ -10,7 +10,7 @@ STATIONARY = ["rest", "sit", "stand"]
 SPEAK = ["say", "scream", "whisper"]
 USAGE = ["use", "create", "destroy"]
 REGARD = ["examine", "see"]
-BEING = ["is", "seem"]
+BEING = ["is", "seem", "name"]
 
 # Adjective Endpoints
 SIZE = ["small", "big", "wide", "thin", "short"]

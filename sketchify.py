@@ -16,6 +16,8 @@ def cropWhiteBackgroundToBoundingBox():
     pass
 
 def sketchify(rawImage):
+    width, height = rawImage.shape[:2]
+    alpha = rawImage[:,:,3]
     gray = cv2.cvtColor(rawImage, cv2.COLOR_BGR2GRAY)
     gray_inv = 255 - gray
     blurred = cv2.GaussianBlur(gray_inv, ksize=(21, 21), sigmaX=0, sigmaY=0)
@@ -23,13 +25,18 @@ def sketchify(rawImage):
 
     blend = dodgeV2(gray, blurred)
     normalized = cv2.normalize(blend, None, 0, 255, cv2.NORM_MINMAX)
-    return normalized
+    mask = np.logical_and(alpha > 0, normalized > 100)
+    alpha[mask] = 255
+    alpha[np.logical_not(mask)] = 0
+    rgb = cv2.cvtColor(normalized, cv2.COLOR_GRAY2RGB)
+    return (np.stack((rgb[:, :, 0], rgb[:, :, 1], rgb[:, :, 2], alpha), axis=2), width, height)
 
 if __name__ == "__main__":
-    name = sys.argv[1]
-    if not name:
-        name = "images/beach_ball.png"
+    if len(sys.argv) > 1:
+        name = sys.argv[1]
+    else:
+        name = "images/ball.png"
     # name = "images/bicycle.png"
-    pencilized = sketchify(cv2.imread(name))
-    cv2.imshow("pencil sketch", pencilized)
+    pencilized, width, height = sketchify(cv2.imread(name, cv2.IMREAD_UNCHANGED))
+    cv2.imshow("pencil sketch", pencilized[:, :, :3])
     cv2.waitKey(0)

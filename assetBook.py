@@ -20,11 +20,13 @@ class Offset:
         self.parent = parent
  
 class EntityImage():
-    def __init__(self, cv2_image):
+    def __init__(self, cv2_image, width, height):
         # image stuff
         
         self.x = 0
         self.y = 0
+        self.width = width
+        self.height = height
         self.layer = -100
         self.animateFunc = None                # This is a function given by animation object
         self.image = cv2_image
@@ -32,7 +34,6 @@ class EntityImage():
             self.updateOffsets()
 
     def updateOffsets(self):
-        self.width, self.height = self.image.shape[:2]
         # Creates 13 offset handles in following formation:
         #              X     X     X
         #                    X  
@@ -68,15 +69,18 @@ class AssetBook:
     def attachImageToEntity(self, entity):
         # reads file from image folder whose name matches Entity.text
         if entity.text in self.reuse:
-            pencil_image = self.reuse[entity.text]
+            pencil_image, width, height = self.reuse[entity.text]
+            print("Reusing " + entity.text)
         else:
             unprocessed = self.getRawImage(entity)
             if unprocessed is not None:
-                pencil_image = sketchify(unprocessed)
-                self.reuse[entity.text] = pencil_image
+                pencil_image, width, height = sketchify(unprocessed)
+                self.reuse[entity.text] = (pencil_image, width, height)
             else:
                 pencil_image = None
-        entity.eImage = EntityImage(pencil_image)
+                width = 0
+                height = 0
+        entity.eImage = EntityImage(pencil_image, width, height)
         # print(entity.eImage.image.shape[:2])
         # cv2.imshow("fuck you", entity.eImage.image)
         # cv2.waitKey(0)
@@ -94,7 +98,7 @@ class AssetBook:
                     file_title = "man" # Blame language, not me. 
         file = Path("images/" + file_title + ".png")
         if file.is_file():
-            return imread("images/" + file_title + ".png")
+            return imread("images/" + file_title + ".png", cv2.IMREAD_UNCHANGED)
         else:
             return imread("images/placeholder.png")
 

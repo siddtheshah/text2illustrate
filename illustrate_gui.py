@@ -7,6 +7,7 @@ from PIL import Image, ImageTk
 import numpy as np
 from highlightBoxNLP import HighlightSupportedNounsText
 from resettabletimer import ResettableTimer
+import cv2
 # import Queue
 
 
@@ -35,7 +36,7 @@ class Text2Illustrate(tk.Tk):
         # self.highlightText.bind(var)
         # var.set("The man stood on a box.")
         # self.highlightText.insert(END, "John rode his bicycle to the store. He met a woman there named Kate. She brought her dog with her.")
-        self.highlightText.insert(END, "The store had a sale today.")
+        self.highlightText.insert(END, "There was a box, a ball, a dog, and a cat.")
         self.preview = tk.Button(self, text="Preview", command=self.check_input)
         self.button = tk.Button(self, text="Submit", command=self.submit_button)
         self.canvas = Canvas(self, width=visualizer.CANVAS_WIDTH, height=visualizer.CANVAS_HEIGHT, bg="white")
@@ -89,15 +90,20 @@ class Text2Illustrate(tk.Tk):
         self.canvas.delete("all")
         scene = sorted(scene, key=lambda x: x.eImage.layer)
         for entity in scene:
+            self.canvas.create_text(100,10,fill="darkblue", text="Scene " + str(self.count))
             eImage = entity.eImage
             if eImage.image is not None:
-                im = Image.fromarray(np.copy(eImage.image))
-                im = im.resize(im.size, Image.ANTIALIAS)
-                imgtk = ImageTk.PhotoImage(image=im)
+                im = Image.fromarray(eImage.image)
+                im = im.convert("RGBA")
+                im.save(entity.text +".png", "PNG")
+                # im = im.resize(im.size, Image.ANTIALIAS)
+                imgtk = ImageTk.PhotoImage(image=im.convert("RGBA"))
                 self.images.append(imgtk)
+
                 print("Reached opencv check")
-                self.canvas.create_text(100,10,fill="darkblue", text="Scene " + str(self.count))
                 self.canvas.create_image((eImage.x, eImage.y), image=imgtk)
+                #self.canvas.create_image((eImage.x, eImage.y), image=imgtk)
+                
                 print("Drew " + entity.text)
         print("Draw Done.")
 

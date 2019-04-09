@@ -110,10 +110,11 @@ class Script:
             if noun in self.allNamedEnts:
                 named_info['type'] = ent_types[noun]
             if named_info['gender'] not in ["UNKNOWN", "NEUTRAL"] and named_info["number"] == "SINGULAR":
-                # Stanford caught a human name that spacy did not.
-                named_info['type'] = "PERSON"
-                self.allNamedEnts.append(noun)
-                ent_types[noun] = "PERSON"
+                if named_info['animacy'] == "ANIMATE":
+                    # Stanford caught a human name that spacy did not.
+                    named_info['type'] = "PERSON"
+                    self.allNamedEnts.append(noun)
+                    ent_types[noun] = "PERSON"
             neAnnotationDict[noun] = named_info
 
         for co_id, chain in coref_raw['corefs'].items():
@@ -289,8 +290,8 @@ class Script:
                     previousDict.pop(text, None) 
 
             for entity in sentenceEntityList:
-                #if entity.baseVerbs: # Replace if entity is doing something new
-                previousDict[entity.text] = (entity, index) # Overwrites old versions if present
+                if entity not in previousDict or entity.baseverbs: # Replace if entity is doing something new
+                    previousDict[entity.text] = (entity, index) # Overwrites old versions if present
             for entityText in previousDict:
                 displayed.append(previousDict[entityText][0])
             self.continuum.append(displayed.copy())

@@ -19,24 +19,33 @@ class HighlightSupportedNounsText(tk.Text):
         tk.Text.__init__(self, *args, **kwargs)
         self.nlp = spacy.load('en_core_web_sm')
         self.tag_configure("invalid", foreground="#FFFF00", background="#FF0000")
-        self.tag_configure("valid", background="#44FF44")
+        self.tag_configure("nonspecFound", background="#44FF44")
+        self.tag_configure("namedEnt", background="#FFFF00", foreground="#0000FF")
+
 
 
     def checkNouns(self, text):
         doc = self.nlp(text)
+        ents = doc.ents
         for np in doc.noun_chunks:
-            query = np.root.lemma_
-            count = self.checkSample(query)
             root = np.root
+            if root.pos_ == "PRON":
+                continue
             start = root.idx
             end = root.idx + len(root.text)
+            if np in doc.ents:
+                tag = "namedEnt"
+            else:
+                query = np.root.lemma_
+                count = self.checkSample(query)
+                if count > 0:
+                    tag = "nonspecFound"
+                else:
+                    tag = "invalid"
             self.mark_set("matchStart", "1.0+%sc" % start)
             self.mark_set("matchEnd", "1.0+%sc" % end)
-            if root.pos_ != "PRON":
-                if count > 0:
-                    self.tag_add("valid", "matchStart", "matchEnd")
-                else:
-                    self.tag_add("invalid", "matchStart", "matchEnd")
+            self.tag_add(tag, "matchStart", "matchEnd")
+
 
     # Mock method. Replace with call to visual database.
     def checkSample(self, query):

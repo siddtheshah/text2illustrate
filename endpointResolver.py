@@ -5,7 +5,7 @@ from nltk.stem import WordNetLemmatizer
 
 # Verb Endpoints
 MOTION_SELF = ["run", "walk", "jump", "go", "move"]
-MOTION_OTHER = ["throw", "push", "pull", "carry"]
+MOTION_OTHER = ["push", "pull", "carry"]
 STATIONARY = ["rest", "sit", "stand"]
 SPEAK = ["say", "scream", "whisper"]
 USAGE = ["use", "create", "destroy"]

@@ -4,6 +4,7 @@ from cv2 import imread
 from sketchify import sketchify
 import entity
 from pathlib import Path
+import collections
  
 # super lame way to pull images, but setting up a
 # visual database is a lot of work when I really need to get a concept
@@ -64,6 +65,7 @@ class AssetBook:
  
     def __init__(self):
         self.reuse = {}
+        self.distinguishCounts = collections.Counter()
 
  
     def attachImageToEntity(self, entity):
@@ -87,20 +89,26 @@ class AssetBook:
         # more complex logic for image retrieval
 
     def getRawImage(self, entity):
-    # Here we would make a request to a visual database. 
-
-        file_title = entity.text
-        if 'type' in entity.ne_annotation:
-            if entity.ne_annotation['type'] == "PERSON":
-                if entity.ne_annotation['gender'] == "FEMALE":
-                    file_title = "woman"
-                else:
-                    file_title = "man" # Blame language, not me. 
-        file = Path("images/" + file_title + ".png")
-        if file.is_file():
-            return imread("images/" + file_title + ".png", cv2.IMREAD_UNCHANGED)
-        else:
-            return imread("images/placeholder.png")
+    # Here we would make a request to a visual database.
+        while self.distinguishCounts[entity.text] < 3:
+            self.distinguishCounts[entity.text] += 1
+            file_title = entity.text
+            if 'type' in entity.ne_annotation:
+                if entity.ne_annotation['type'] == "PERSON":
+                    if entity.ne_annotation['gender'] == "FEMALE":
+                        file_title = "woman"
+                    else:
+                        file_title = "man" # Blame language, not me. 
+            file = Path("images/" + file_title + str(self.distinguishCounts[entity.text] - 1) + ".png")
+            if file.is_file():
+                try:
+                    ret = imread("images/" + file_title + str(self.distinguishCounts[entity.text] - 1)  + ".png", cv2.IMREAD_UNCHANGED)
+                    return ret
+                except:
+                    continue
+            else:
+                continue
+        return None
 
 # if __name__ == "__main__":
     # entity = Entity()

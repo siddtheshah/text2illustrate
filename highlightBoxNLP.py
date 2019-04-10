@@ -49,7 +49,7 @@ class HighlightSupportedNounsText(tk.Text):
 
     # Mock method. Replace with call to visual database.
     def checkSample(self, query):
-        file = Path("images/" + query + ".png")
+        file = Path("images/" + query + "0.png")
         if file.is_file():
             return 1
         else:

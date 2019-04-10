@@ -60,3 +60,4 @@ Project install plan:
         > apt install python3-tk
         > pip install opencv-python
         > pip install resettabletimer
+        > pip install google-images-download

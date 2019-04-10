@@ -202,47 +202,47 @@ class Script:
                         prep = self.nlp.lemma(word)[0][1]
 
                 bv = self.verbResolver.resolve(verb)
-                if bv:
-                    if subj[0] not in self.allNamedEnts and subj in representativeMentionsDict:
-                        resolvedSubjectString = representativeMentionsDict[subj]
-                    else:
-                        resolvedSubjectString = subj[0] 
-                    if obj[0] not in self.allNamedEnts and obj in representativeMentionsDict:
-                        resolvedObjectString = representativeMentionsDict[obj]
-                    else:
-                        resolvedObjectString = obj[0]
-                    print("Resolved:")
-                    print(resolvedSubjectString)
-                    print(bv)
-                    print(resolvedObjectString)
-
-                    reducedSubjString = self.getReduceString(namedEnts, resolvedSubjectString)
-                    reducedObjString = self.getReduceString(namedEnts, resolvedObjectString)
-                    resolvedSubjEntity = None
-                    resolvedObjEntity = None
-                    if reducedSubjString in self.text2ent:
-                        resolvedSubjEntity = self.text2ent[reducedSubjString]
-                    if reducedObjString in self.text2ent:
-                        resolvedObjEntity = self.text2ent[reducedObjString]
-
-                    if resolvedSubjEntity:
-                        if resolvedObjEntity:
-                            quadruple = (resolvedSubjEntity.text, prep, bv, resolvedObjEntity.text)
-                            if quadruple not in unduplicated:
-                                resolvedSubjEntity.preps.append(prep)
-                                resolvedSubjEntity.baseVerbs.append(bv)
-                                resolvedSubjEntity.objs.append(resolvedObjEntity)
-                                unduplicated.append(quadruple)
-                        elif bv in ["is", "seem"]:
-                            # Is-was <adj> relationship
-                            # reducedObjString is actually an adjective
-                            resolvedSubjEntity.adjectives.append(reducedObjString)
-                        else:
-                            print("Unresolved ObjEntity")
-                    else:
-                        print("Unresolved SubjEntity")
+                if bv is None:
+                    bv = verb
+                if subj[0] not in self.allNamedEnts and subj in representativeMentionsDict:
+                    resolvedSubjectString = representativeMentionsDict[subj]
                 else:
-                    print("Unresolved Verb")
+                    resolvedSubjectString = subj[0] 
+                if obj[0] not in self.allNamedEnts and obj in representativeMentionsDict:
+                    resolvedObjectString = representativeMentionsDict[obj]
+                else:
+                    resolvedObjectString = obj[0]
+                print("Resolved:")
+                print(resolvedSubjectString)
+                print(bv)
+                print(resolvedObjectString)
+
+                reducedSubjString = self.getReduceString(namedEnts, resolvedSubjectString)
+                reducedObjString = self.getReduceString(namedEnts, resolvedObjectString)
+                resolvedSubjEntity = None
+                resolvedObjEntity = None
+                if reducedSubjString in self.text2ent:
+                    resolvedSubjEntity = self.text2ent[reducedSubjString]
+                if reducedObjString in self.text2ent:
+                    resolvedObjEntity = self.text2ent[reducedObjString]
+
+                if resolvedSubjEntity:
+                    if resolvedObjEntity:
+                        quadruple = (resolvedSubjEntity.text, prep, bv, resolvedObjEntity.text)
+                        if quadruple not in unduplicated:
+                            resolvedSubjEntity.preps.append(prep)
+                            resolvedSubjEntity.baseVerbs.append(bv)
+                            resolvedSubjEntity.origVerb.append(verb)
+                            resolvedSubjEntity.objs.append(resolvedObjEntity)
+                            unduplicated.append(quadruple)
+                    elif bv in ["is", "seem"]:
+                        # Is-was <adj> relationship
+                        # reducedObjString is actually an adjective
+                        resolvedSubjEntity.adjectives.append(reducedObjString)
+                    else:
+                        print("Unresolved ObjEntity")
+                else:
+                    print("Unresolved SubjEntity")
 
             # Entity merge handling.
             absorbed = []

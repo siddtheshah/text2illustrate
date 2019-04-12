@@ -2,15 +2,27 @@ import cv2
 import numpy as np
 from cv2 import imread
 from sketchify import sketchify
-import entity
+from entity import Entity
 from pathlib import Path
 import collections
- 
-# super lame way to pull images, but setting up a
-# visual database is a lot of work when I really need to get a concept
-# going here.
+import mysql.connector
+from mysql.connector import Error
 
-# This class 
+TINY_WIDTH = 100
+TINY_HEIGHT = 400
+
+SMALL_WIDTH = 200
+SMALL_HEIGHT = 200
+
+MEDIUM_WIDTH = 400
+MEDIUM_HEIGHT = 400
+
+LARGE_WIDTH = 550
+LARGE_HEIGHT = 550
+
+HUGE_WIDTH = 700
+HUGE_HEIGHT = 700
+  
 
 class Offset:
     # pos_x,y is a vector from the topleft corner of the image. 
@@ -60,6 +72,74 @@ class EntityImage():
             self.x, self.y, self.layer)
 
 
+def queryForSize(entity):
+    noun = entity.text
+    ne_data = entity.ne_annotation
+    if 'type' in ne_data:
+        if ne_data['type'] == "PERSON":
+            if entity.ne_annotation['gender'] == "FEMALE":
+                noun = "woman"
+            else:
+                noun = "man" # Blame language, not me. 
+    """ Connect to MySQL database """
+    query = "SELECT entity, realworldsize FROM sizes WHERE entity REGEXP %s"
+    regexPattern = "obj.*[-_]" + noun + "-" 
+    quantized = [SMALL_WIDTH, SMALL_HEIGHT]
+
+    try:
+        conn = mysql.connector.connect(host='localhost',
+                                       database='text2illustrate',
+                                       user='public',
+                                       password='password')
+
+        if conn.is_connected():
+            print('Connected to MySQL database')
+        cursor = conn.cursor()
+        cursor.execute(query, (regexPattern, ))
+        rows = cursor.fetchall()
+
+        # for row in rows:
+        #     print(row)
+        if rows:
+            vals = [row[1] for row in rows]
+            median = np.median(vals)
+        else:
+            median = 3
+        print(median)
+        quantized = sizeQuantizer(median)
+
+
+
+        if "small" in entity.adjectives:
+            quantized[0]*=.6
+            quantized[1]*=.6
+        elif "big" in entity.adjectives:
+            quantized[0]*=1.5
+            quantized[1]*=1.5
+
+ 
+    except Error as e:
+        print(e)
+ 
+    finally:
+        cursor.close()
+        conn.close()
+    quantized = [int(q) for q in quantized]
+    # print(quantized)
+    return tuple(quantized)
+
+def sizeQuantizer(sizeMetric):
+    if sizeMetric < 1:
+        return [TINY_WIDTH, TINY_HEIGHT]
+    elif sizeMetric < 4:
+        return [SMALL_WIDTH, SMALL_HEIGHT]
+    elif sizeMetric < 15:
+        return [MEDIUM_WIDTH, MEDIUM_HEIGHT]
+    elif sizeMetric < 100:
+        return [LARGE_WIDTH, LARGE_HEIGHT]
+    else:
+        return [HUGE_WIDTH, HUGE_HEIGHT]
+
  
 class AssetBook:
  
@@ -74,9 +154,14 @@ class AssetBook:
             pencil_image, width, height = self.reuse[entity.text]
             print("Reusing " + entity.text)
         else:
+            width, height = queryForSize(entity)
             unprocessed = self.getRawImage(entity)
+            resized = cv2.resize(unprocessed, (width, height))
+
             if unprocessed is not None:
-                pencil_image, width, height = sketchify(unprocessed)
+                pencil_image = sketchify(resized)
+                # cv2.imshow("foo", pencil_image)
+                # cv2.waitKey(0)
                 self.reuse[entity.text] = (pencil_image, width, height)
             else:
                 pencil_image = None
@@ -84,8 +169,7 @@ class AssetBook:
                 height = 0
         entity.eImage = EntityImage(pencil_image, width, height)
         # print(entity.eImage.image.shape[:2])
-        # cv2.imshow("fuck you", entity.eImage.image)
-        # cv2.waitKey(0)
+
         # more complex logic for image retrieval
 
     def getRawImage(self, entity):
@@ -110,8 +194,12 @@ class AssetBook:
                 continue
         return None
 
-# if __name__ == "__main__":
+if __name__ == "__main__":
     # entity = Entity()
-    # entity.text = "dog"
-    # ast = AssetBook()
-    # ast.attachImageToEntity(entity)
+    entity = Entity("dog")
+    ast = AssetBook()
+    ast.attachImageToEntity(entity)
+
+    # SQL query for size tests.
+    # entity = Entity("knife")
+    # queryForSize(entity)

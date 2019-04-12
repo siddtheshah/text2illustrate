@@ -232,7 +232,7 @@ class Script:
                         if quadruple not in unduplicated:
                             resolvedSubjEntity.preps.append(prep)
                             resolvedSubjEntity.baseVerbs.append(bv)
-                            resolvedSubjEntity.origVerb.append(verb)
+                            resolvedSubjEntity.origVerbs.append(verb)
                             resolvedSubjEntity.objs.append(resolvedObjEntity)
                             unduplicated.append(quadruple)
                     elif bv in ["is", "seem"]:

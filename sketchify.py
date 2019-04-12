@@ -47,8 +47,10 @@ def cropWhiteBackgroundToBoundingBox():
 #     rgb = cv2.cvtColor(normalized, cv2.COLOR_GRAY2RGB)
 #     return (np.stack((rgb[:, :, 0], rgb[:, :, 1], rgb[:, :, 2], alpha), axis=2), width, height)
 
-def sketchify(rawImage):
-    resized = cv2.resize(rawImage, (300, 300))
+
+# Takes in an already resized image. DO NOT RESIZE AFTERWARD. You've been warned.
+def sketchify(resized):
+    # resized = cv2.resize(rawImage, (300, 300))
     width, height = resized.shape[:2]
     alpha = resized[:,:,3]
     marked_img = resized[:,:, :3]
@@ -64,21 +66,31 @@ def sketchify(rawImage):
     blend= dodge(blur_img,gray_img)
     normalized = cv2.normalize(blend, None, 0, 255, cv2.NORM_MINMAX)
     
-    normalized[normalized < 240] = 0
-    mask = np.logical_and(alpha > 0, normalized > 0)
+    normalized[normalized < 240] = 0 # Dump all non dark parts.
+    # Now that we have the "core" darkness, we smear it out a bit.
+    # elements in the interior of a dark polygon get darker than those outside it.
+    reblur = scipy.ndimage.filters.gaussian_filter(normalized,sigma=9)
+
+    # mask = np.logical_and(alpha == 0, reblur > 245)
+    alpha[alpha > 0] = 0
+    mask = reblur < 250
     alpha[mask] = 255
-    alpha[np.logical_not(mask)] = 0
     
+    alphaMap = cv2.cvtColor(alpha, cv2.COLOR_GRAY2RGB)
+    cv2.imshow("pencil sketch", alphaMap)
+    cv2.waitKey(0)
+
+
     rgb = cv2.cvtColor(normalized, cv2.COLOR_GRAY2RGB)
-    return (np.stack((rgb[:, :, 0], rgb[:, :, 1], rgb[:, :, 2], alpha), axis=2), width, height)
+    return np.stack((rgb[:, :, 0], rgb[:, :, 1], rgb[:, :, 2], alpha), axis=2)
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         name = sys.argv[1]
     else:
-        name = "images/cat0.png"
+        name = "images/dog0.png"
     print(name)
     # name = "images/bicycle.png"
-    pencilized, width, height = sketchify(cv2.imread(name, cv2.IMREAD_UNCHANGED))
+    pencilized = sketchify(cv2.imread(name, cv2.IMREAD_UNCHANGED))
     cv2.imshow("pencil sketch", pencilized[:, :, :3])
     cv2.waitKey(0)

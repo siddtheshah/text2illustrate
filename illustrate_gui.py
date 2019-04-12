@@ -94,7 +94,7 @@ class Text2Illustrate(tk.Tk):
             eImage = entity.eImage
             if eImage.image is not None:
                 im = Image.fromarray(eImage.image)
-                # im.save(entity.text +".png", "PNG")
+                # im.save(entity.text + ".png", "PNG")
                 # im = im.resize(im.size, Image.ANTIALIAS)
                 imgtk = ImageTk.PhotoImage(image=im.convert("RGBA"))
                 self.images.append(imgtk)

@@ -6,6 +6,12 @@ java -mx4g -cp "*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer -port 9000 -t
 for access to stanfordcorenlp python file:
 vim /home/siddhant/.local/lib/python3.6/site-packages/stanfordcorenlp/corenlp.py 
 
+To query the sql server you set up (password = sql):
+
+
+/usr/bin/mysql -u siddhant -p;
+use text2illustrate;
+SELECT entity, realworldsize from sizes WHERE entity REGEXP 'airport';
 
 
 

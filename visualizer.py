@@ -11,21 +11,6 @@ from threading import Lock, Thread
 CANVAS_WIDTH = 1200
 CANVAS_HEIGHT = 800
 
-TINY_WIDTH = 100
-TINY_HEIGHT = 400
-
-SMALL_WIDTH = 200
-SMALL_HEIGHT = 200
-
-MEDIUM_WIDTH = 400
-MEDIUM_HEIGHT = 400
-
-LARGE_WIDTH = 550
-LARGE_HEIGHT = 550
-
-HUGE_WIDTH = 700
-HUGE_HEIGHT = 700
-
 def AlignTo(Offset1, Offset2):
     Offset1.parent.x = Offset2.pos_x - Offset1.pos_x
     Offset1.parent.y = Offset2.pos_y - Offset2.pos_y
@@ -257,38 +242,7 @@ class Visualizer:
 
         # self.lock_.release()
 
-    def SetDefaultSizes(self, entitiesWithImage):
-        # Here we're going to use some awful logic to determine default size.
-        # Replace with look up on Vignet data.
-        for entityWithImage in entitiesWithImage:
-            if entityWithImage.eImage.image is not None:
-                cv2_image = entityWithImage.eImage.image
-
-                resize_width = SMALL_WIDTH
-                resize_height = SMALL_HEIGHT
-                ne_data = entityWithImage.ne_annotation
-                entity_type = None
-                if 'type' in ne_data:
-                    entity_type = ne_data['type']
-
-                if entity_type:
-                    if entity_type == "PERSON":
-                        resize_width = MEDIUM_HEIGHT
-                        resize_height = MEDIUM_HEIGHT
-
-                if "small" in entityWithImage.adjectives:
-                    resize_width*=.75
-                    resize_height*=.75
-                elif "big" in entityWithImage.adjectives:
-                    resize_width*=1.25
-                    resize_height*=1.25
-                
-                resized = cv2.resize(cv2_image, (resize_width, resize_width))
-                entityWithImage.eImage = EntityImage(resized, resize_width, resize_height)
-        return entitiesWithImage
-
     def ArrangeStaticScene(self, entityList):
-        self.SetDefaultSizes(entityList)
         graph = StaticVisualGraph(entityList)
         graph.AssignLocations()
         return entityList

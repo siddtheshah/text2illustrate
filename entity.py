@@ -5,6 +5,7 @@ class Entity:
         self.text = phrase
         self.adjectives = []           # not usable without search integration
         self.baseVerbs = []             # can't be used for image base w/o search
+        self.origVerbs = []
         self.preps = []
         self.objs = []
         self.ne_annotation = {}

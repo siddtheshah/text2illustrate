@@ -18,14 +18,17 @@ class Entity:
 
     def absorb(self, entity, replaceName=False):
         if replaceName:
-            self.text = entity.text
-            self.ne_annotation = entity.ne_annotation
-            self.eImage = entity.eImage
-        self.adjectives.extend(entity.adjectives)
-        self.baseVerbs.extend(entity.baseVerbs)
-        self.preps.extend(entity.preps)
-        self.objs.extend(entity.objs)
-
+            self.text = entity.text.copy()
+            self.ne_annotation = entity.ne_annotation.copy()
+            self.eImage = entity.eImage.copy()
+        self.adjectives.extend(entity.adjectives.copy())
+        for bv in entity.baseVerbs:
+            if bv != "is":
+                self.baseVerbs.append(bv)
+        self.preps.extend(entity.preps.copy())
+        for obj in entity.objs:
+            if obj.text != self.text:
+                self.objs.append(obj)
 
     def __repr__(self):
         return '\n<\n\ttext: {0}\n\tadjectives: {1}\n\tbaseVerbs: {2}\n\tpreps: {3}\n\tobjs: {4}\n\tne_ann: {5}\n>'.format(

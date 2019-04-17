@@ -4,11 +4,11 @@ from nltk.corpus import wordnet as wn
 from nltk.stem import WordNetLemmatizer
 
 # Verb Endpoints
-MOTION_SELF = ["run", "walk", "jump", "go", "move"]
-MOTION_OTHER = ["push", "pull", "carry"]
+MOTION_SELF = ["run", "walk", "leap", "go", "move"]
+MOTION_OTHER = ["push", "pull", "carry", "throw"]
 STATIONARY = ["rest", "sit", "stand"]
 SPEAK = ["say", "scream", "whisper"]
-USAGE = ["use", "create", "destroy"]
+USAGE = ["use", "made", "destroy"]
 REGARD = ["examine", "see"]
 BEING = ["is", "seem", "name"]
 
@@ -126,8 +126,8 @@ class AdjectiveResolver(EndpointResolver):
         return self.resolveWordToEndpointsBFS(word)
 
 if __name__ == "__main__":
-    resolver = AdjectiveResolver()
-    testWord = "Grumpy"
+    resolver = VerbResolver()
+    testWord = "made"
 
     result1 = resolver.resolveWordToEndpointsBFS(testWord, 100)
     if result1:

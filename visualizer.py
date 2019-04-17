@@ -79,10 +79,8 @@ class StaticVisualGraph:
     def NodeToNodeOffsets(self):
         for node in self.nodeList:
             for verb, prep, otherNode in zip(node.entity.baseVerbs, node.entity.preps, node.forward):
-                offset = np.array([0.0, 0.0, 0.0])
-                offset += self.SelectVerbOffset(verb)
-                if prep:
-                    offset += self.SelectPrepOffset(prep)
+                
+                offset = self.SelectOffsetTogether(verb, prep)
                 print("Offset: ")
                 print(offset.tolist())
                 if not (node.entity.eImage.image is not None and otherNode.entity.eImage.image is not None):
@@ -95,6 +93,19 @@ class StaticVisualGraph:
                     offset[2] = -1         
                 node.otherOffsets[otherNode] = offset
                 otherNode.otherOffsets[node] = -1*offset #graph is now bidirectional
+
+    def SelectOffsetTogether(self, verb, prep):
+        offset = np.array([0.0, 0.0, 0.0])
+        offset += self.SelectVerbOffset(verb)
+        if prep:
+            offset += self.SelectPrepOffset(prep)
+            # conditional tree
+            if verb in endpointResolver.MOTION_OTHER:
+                offset = np.array([1.5, 0, -1.0])
+        return offset
+
+
+
 
     def SelectVerbOffset(self, verb):
         offset = np.array([0.0, 0.0, 0.0])
@@ -114,15 +125,15 @@ class StaticVisualGraph:
         # Things look inverted because we want the object's relation to us.
         offset = np.array([0.0, 0.0, 0.0])
         if prep in ["below", "beneath", "under"]: # object is above us, etc
-            offset = np.array([0.0, .5, 1.0])
+            offset = np.array([0.0, .75, 1.0])
         elif prep in ["with", "to", "at", "before"]: # we're at object. push it back a layer
             offset = np.array([.25, 0.0, -1.0])
         elif prep in ["in", "inside", "into", "within"]: # object in foreground
             offset = np.array([0.0, 0.0, 1.0])
-        elif prep in ["beside", "near", "outside"]: # object nearby, we're more important
+        elif prep in ["beside", "near", "outside", "by", "nearby"]: # object nearby, we're more important
             offset = np.array([.25, 0.0, -1.0]) 
         elif prep in ["over", "above", "atop", "on", "onto", "upon"]: # object beneath us
-            offset = np.array([0.0, -.5, -1.0])
+            offset = np.array([0.0, -.75, -1.0])
         return offset
 
     def CreateIslands(self):
@@ -235,7 +246,7 @@ class Visualizer:
         # self.lock_.acquire()
         for entityList in self.visualScript:
             self.ArrangeStaticScene(entityList)
-            print(entityList)
+            # print(entityList)
             # self.ArrangeDynamicScene(entityList)
 
             callBackFunc(entityList) # Should add in asynchronous processing here

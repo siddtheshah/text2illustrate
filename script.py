@@ -3,8 +3,10 @@ from stanfordcorenlp import StanfordCoreNLP
 from collections import defaultdict
 import spacy
 from spacy.lemmatizer import Lemmatizer
+from spacy.lang.en import LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES
 from entity import Entity
 from endpointResolver import *
+import re
 
 
 
@@ -56,21 +58,21 @@ class Cursor:
         return self.pool
 
 
-
 class Script:
     def __init__(self):
         self.nlp = StanfordCoreNLP('http://localhost', port=9000)
         self.spacy = spacy.load('en_core_web_sm')
-        self.rawText = None
+        self.rewritten = None
         self.sentences = None
         self.text2ent = defaultdict(None)
-        self.lemmatizer = Lemmatizer()
+        self.lemmatizer = Lemmatizer(LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES)
         self.adjResolver = AdjectiveResolver()
         self.verbResolver = VerbResolver()
 
-
     def processEntities(self, text):
-        self.rawText = text
+        text = self.rewriteText(text)
+        # print(text)
+        self.rewritten = text
         doc = self.spacy(text)
         self.sentences = list(doc.sents)
         self.allNamedEnts = list(set([e.text for e in doc.ents]))
@@ -176,7 +178,7 @@ class Script:
                     if syntacticalRep in representativeMentionsDict:
                         textEnt = representativeMentionsDict[syntacticalRep]
                     else:
-                        textEnt = np.root.text
+                        textEnt = np.root.lemma_
                 entity = Entity(textEnt)
                 if textEnt in neAnnotationDict:
                     entity.ne_annotation = neAnnotationDict[textEnt]
@@ -278,6 +280,7 @@ class Script:
         for index, sentenceEntityList in enumerate(self.sentenceEntityLists):
             currentTexts = set([entity.text for entity in sentenceEntityList])
             prevTexts = previousDict.keys()
+            # print(previousDict)
             displayed = []
             if len(set(prevTexts).intersection(currentTexts)) == 0:
                 previousDict = {} # If nothing's retained, blank slate
@@ -288,9 +291,9 @@ class Script:
                         popList.append(text)
                 for text in popList:
                     previousDict.pop(text, None) 
-
             for entity in sentenceEntityList:
-                if entity not in previousDict or entity.baseverbs: # Replace if entity is doing something new
+                # print(entity)
+                if entity.text not in previousDict or entity.baseVerbs: # Replace if entity is doing something new
                     previousDict[entity.text] = (entity, index) # Overwrites old versions if present
             for entityText in previousDict:
                 displayed.append(previousDict[entityText][0])
@@ -329,6 +332,15 @@ class Script:
         print("Reduced: " + reduceString)           
         return reduceString
 
+    def rewriteText(self, text):
+        text = re.sub('[Oo]n top of', 'atop', text)
+        text = re.sub('[Aa]t the top of', 'atop', text)
+        text = re.sub('[Ii]n front of', 'before', text)
+        text = re.sub('[Aa]t the front of', 'before', text)
+        text = re.sub('[Oo]utside of', 'outside', text)
+        text = re.sub('[Ii]nside of', 'inside', text)
+        text = re.sub('[Aa]t the side of', 'near', text)
+        return text
 
 
 
@@ -349,17 +361,24 @@ if __name__ == "__main__":
     # s.processEntities("They were heading to the store.")
 
     # adjective tests
-    # s = Script().processEntities("The nimble rabbit jumped over the log.")
+    # s.processEntities("The brown rabbit jumped over the log.")
     # s = Script().processEntities("The cat was small.")
 
     # Blank slating
     # s.processEntities("The nimble rabbit jumped over the log. The fox turned and chased the chicken instead.")
     
     # Is/was relations
+    s.processEntities("Jake was a policeman during his younger years.")
     # s.processEntities("Barry saw them outside his window. They were tall, and menacing.")
     # s.processEntities("The car is black.")
 
-    s.processEntities("The dog sat on the box. A man walked up to pet the dog. the dog ran away and the man chased it.")
+    # s.processEntities("The dog sat on the box. A man walked up to pet the dog. the dog ran away and the man chased it.")
+    
+    # Rewriter
+    # s.processEntities("The dog sat on top of the box.")
 
+    # Continuum
+    # s.processEntities("The man stood on a box. The cat stared at him.")
+    
     print("Continuum: ")
     s.CreateContinuum()

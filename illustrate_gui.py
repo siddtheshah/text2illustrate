@@ -73,17 +73,17 @@ class Text2Illustrate(tk.Tk):
 
     def scene_callback(self, scene):
         self.sceneBuffer.append(scene)
-        print("Need draw lock acquired")
+        # print("Need draw lock acquired")
         # DRAW_LOCK_.acquire()
-        print("draw lock acquired")
+        # print("draw lock acquired")
         scene = self.sceneBuffer.pop(0)
         self.draw_static_scene(scene)
-        print("Need draw lock release")
+        # print("Need draw lock release")
         # DRAW_LOCK_.release()
         # for thread in self.threads:
         #     thread.join()
         time.sleep(5)
-        print("draw lock released")
+        # print("draw lock released")
 
     def draw_static_scene(self, scene):
         self.count += 1
@@ -108,26 +108,16 @@ class Text2Illustrate(tk.Tk):
 
 
 
-    def diagnostic(self):
-        self.threads = [t for t in self.threads if t.isAlive()]
-        print("Active Threads:" + str(len(self.threads)))
-        self.after(2000, self.diagnostic)
+    # def diagnostic(self):
+    #     self.threads = [t for t in self.threads if t.isAlive()]
+    #     print("Active Threads:" + str(len(self.threads)))
+    #     self.after(2000, self.diagnostic)
 
 
 
 def execute():
     master = Text2Illustrate()
-    # back = tk.Frame(master, width=1200, height=800, bg='white')
-    # back.pack()
-    # canvas = Canvas(master, width=visualizer.CANVAS_WIDTH, height=visualizer.CANVAS_HEIGHT, bg="white")
-    # # w.create_rectangle(400, 400, 800, 800, fill="#476042")
-    # img = tk.PhotoImage(file="images/beach_ball.png")
-    # canvas.create_image((400,400), image=img)
-    # Label(master, text="Enter text:").pack()
-    # text_input = Entry(master)
-    # text_input.pack()
-    # canvas.pack()
-    master.after(2000, master.diagnostic)
+    # master.after(2000, master.diagnostic)
     master.mainloop()
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ import mysql.connector
 from mysql.connector import Error
 
 TINY_WIDTH = 100
-TINY_HEIGHT = 400
+TINY_HEIGHT = 100
 
 SMALL_WIDTH = 200
 SMALL_HEIGHT = 200
@@ -92,8 +92,8 @@ def queryForSize(entity):
                                        user='public',
                                        password='password')
 
-        if conn.is_connected():
-            print('Connected to MySQL database')
+        # if conn.is_connected():
+        #     print('Connected to MySQL database')
         cursor = conn.cursor()
         cursor.execute(query, (regexPattern, ))
         rows = cursor.fetchall()
@@ -107,8 +107,6 @@ def queryForSize(entity):
             median = 3
         print(median)
         quantized = sizeQuantizer(median)
-
-
 
         if "small" in entity.adjectives:
             quantized[0]*=.6
@@ -156,9 +154,8 @@ class AssetBook:
         else:
             width, height = queryForSize(entity)
             unprocessed = self.getRawImage(entity)
-            resized = cv2.resize(unprocessed, (width, height))
-
             if unprocessed is not None:
+                resized = cv2.resize(unprocessed, (width, height))
                 pencil_image = sketchify(resized)
                 # cv2.imshow("foo", pencil_image)
                 # cv2.waitKey(0)
@@ -174,24 +171,32 @@ class AssetBook:
 
     def getRawImage(self, entity):
     # Here we would make a request to a visual database.
-        while self.distinguishCounts[entity.text] < 3:
-            self.distinguishCounts[entity.text] += 1
-            file_title = entity.text
-            if 'type' in entity.ne_annotation:
-                if entity.ne_annotation['type'] == "PERSON":
-                    if entity.ne_annotation['gender'] == "FEMALE":
-                        file_title = "woman"
-                    else:
-                        file_title = "man" # Blame language, not me. 
-            file = Path("images/" + file_title + str(self.distinguishCounts[entity.text] - 1) + ".png")
+        file_title = entity.text
+        result = self.getImageIfThere(file_title) # try something direct
+        if result is not None:
+            return result
+        elif 'type' in entity.ne_annotation: # otherwise redirect
+            if entity.ne_annotation['type'] == "PERSON":
+                if entity.ne_annotation['gender'] == "FEMALE":
+                    file_title = "woman"
+                else:
+                    file_title = "man" # Blame language, not me.
+                return self.getImageIfThere(file_title)
+        return None
+
+    def getImageIfThere(self, file_title):
+        i = self.distinguishCounts[file_title]
+        while i < 3:
+            file = Path("images/" + file_title + str(i) + ".png")
+            print(file)
             if file.is_file():
                 try:
-                    ret = imread("images/" + file_title + str(self.distinguishCounts[entity.text] - 1)  + ".png", cv2.IMREAD_UNCHANGED)
+                    ret = imread("images/" + file_title + str(i)  + ".png", cv2.IMREAD_UNCHANGED)
+                    self.distinguishCounts[file_title] = i + 1
                     return ret
                 except:
-                    continue
-            else:
-                continue
+                    pass
+            i += 1
         return None
 
 if __name__ == "__main__":

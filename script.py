@@ -70,6 +70,9 @@ class Script:
         self.verbResolver = VerbResolver()
 
     def processEntities(self, text):
+        self.sentenceEntityLists = []
+        if text.strip() == "":
+            return
         text = self.rewriteText(text)
         # print(text)
         self.rewritten = text
@@ -165,20 +168,19 @@ class Script:
             # Replace with stanford impl.
             for np in sendoc.noun_chunks:
                 print(np.root)
-                print(list(np.root.children))
+                # print(list(np.root.children))
                 adjToks = list(filter(lambda x: x.pos_ == "ADJ", list(np.root.children)))
                 adjectives = [tok.lemma_ for tok in adjToks]
                 # print(adjectives)
-                ne_annotation = {}
                 if np.text in namedEnts:
                     textEnt = np.text
                 else:
                     syntacticalRep = (np.root.text, k+1, np.start +1 , np.end + 1)
-                    print(syntacticalRep)
+                    # print(syntacticalRep)
                     if syntacticalRep in representativeMentionsDict:
                         textEnt = representativeMentionsDict[syntacticalRep]
                     else:
-                        textEnt = np.root.lemma_
+                        textEnt = self.lemmatizer(np.root.text, "NOUN")[0]
                 entity = Entity(textEnt)
                 if textEnt in neAnnotationDict:
                     entity.ne_annotation = neAnnotationDict[textEnt]
@@ -189,7 +191,7 @@ class Script:
                     entStrings.add(entString)                    
 
             # print(extractedRelations[k])
-
+            print(self.text2ent)
             # Attach relationships to entities. Only annotates verbs that resolve
             # Most should, since there is taxonomy of verbs and LCH is pretty good.
             unduplicated = []
@@ -359,6 +361,7 @@ if __name__ == "__main__":
     # s = Script().processEntities("John Marston walked down the dusty road. A lonely cactus greeted him.")
     # s.processEntities("Bob was chewing on some apples. Andy wanted to share them. He was getting annoyed, so he left the room")
     # s.processEntities("They were heading to the store.")
+    s.processEntities("He was going to the store")
 
     # adjective tests
     # s.processEntities("The brown rabbit jumped over the log.")
@@ -368,7 +371,7 @@ if __name__ == "__main__":
     # s.processEntities("The nimble rabbit jumped over the log. The fox turned and chased the chicken instead.")
     
     # Is/was relations
-    s.processEntities("Jake was a policeman during his younger years.")
+    # s.processEntities("Jake was a policeman during his younger years.")
     # s.processEntities("Barry saw them outside his window. They were tall, and menacing.")
     # s.processEntities("The car is black.")
 

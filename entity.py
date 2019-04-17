@@ -22,12 +22,10 @@ class Entity:
             self.ne_annotation = entity.ne_annotation.copy()
             self.eImage = entity.eImage.copy()
         self.adjectives.extend(entity.adjectives.copy())
-        for bv in entity.baseVerbs:
-            if bv != "is":
+        for bv, prep, obj in zip(entity.baseVerbs, entity.preps, entity.objs):
+            if bv != "is" and obj.text != self.text:
                 self.baseVerbs.append(bv)
-        self.preps.extend(entity.preps.copy())
-        for obj in entity.objs:
-            if obj.text != self.text:
+                self.preps.append(prep)
                 self.objs.append(obj)
 
     def __repr__(self):

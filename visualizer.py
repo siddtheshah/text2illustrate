@@ -279,7 +279,7 @@ def staticShowMultiple(entityList):
 
 if __name__ == "__main__":
     v = Visualizer()
-    textBody = ("There was a box, a ball, a dog, and a cat.")
+    textBody = ("Jake was a policeman during his younger years.")
     v.DrawStoryWithCallback(textBody, staticShowMultiple)
     # textBody = "The cat sat near the man."
     # v.DrawStoryWithCallback(textBody, staticShowMultiple)

@@ -40,7 +40,8 @@ class Text2Illustrate(tk.Tk):
         self.preview = tk.Button(self, text="Preview", command=self.check_input)
         self.button = tk.Button(self, text="Submit", command=self.submit_button)
         self.canvas = Canvas(self, width=visualizer.CANVAS_WIDTH, height=visualizer.CANVAS_HEIGHT, bg="white")
-
+        self.label = Label(self, text="Enter text, and submit for illustration! (Preview to make sure we have the images)")
+        self.label.pack()
         self.highlightText.pack()
         self.preview.pack()
         self.button.pack()
@@ -99,7 +100,7 @@ class Text2Illustrate(tk.Tk):
                 imgtk = ImageTk.PhotoImage(image=im.convert("RGBA"))
                 self.images.append(imgtk)
 
-                print("Reached opencv check")
+                # print("Reached opencv check")
                 self.canvas.create_image((eImage.x, eImage.y), image=imgtk)
                 #self.canvas.create_image((eImage.x, eImage.y), image=imgtk)
                 

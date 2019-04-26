@@ -110,7 +110,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         name = sys.argv[1]
     else:
-        name = "images/dog2.png"
+        name = "images/dog1.png"
     print(name)
     # name = "images/bicycle.png"
     pencilized = sketchify(cv2.imread(name, cv2.IMREAD_UNCHANGED))

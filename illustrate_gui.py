@@ -107,6 +107,10 @@ class Text2Illustrate(tk.Tk):
                 print("Drew " + entity.text)
         print("Draw Done.")
 
+    def draw_dynamic_scene(self, scene):
+        pass
+
+
 
 
     # def diagnostic(self):

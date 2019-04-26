@@ -11,10 +11,6 @@ from threading import Lock, Thread
 CANVAS_WIDTH = 1200
 CANVAS_HEIGHT = 800
 
-def AlignTo(Offset1, Offset2):
-    Offset1.parent.x = Offset2.pos_x - Offset1.pos_x
-    Offset1.parent.y = Offset2.pos_y - Offset2.pos_y
-
 class StaticVisualGraph:
     class VisualNode:
         def __init__(self, entity):
@@ -219,6 +215,7 @@ class Visualizer:
         self.height = height
         self.assetBook = AssetBook()
         self.script = Script()
+        self.animator = Animator()
         self.visualScript = []        
         # self.lock_ = Lock()
 
@@ -246,8 +243,8 @@ class Visualizer:
         # self.lock_.acquire()
         for entityList in self.visualScript:
             self.ArrangeStaticScene(entityList)
-            # print(entityList)
             # self.ArrangeDynamicScene(entityList)
+            # print(entityList)
 
             callBackFunc(entityList) # Should add in asynchronous processing here
 
@@ -261,10 +258,11 @@ class Visualizer:
         # Set default sizes and positions of 
 
 
-    def ArrangeDynamicScene(self, imageEntities):
+    def ArrangeDynamicScene(self, entityList):
         # Creates animation objects from animate.py, uses them to parameterize functions
         # which are then attached to the imageEntities
-        pass
+        self.animator.assignAnimations(entityList)
+        return entityList
 
 def staticShow(entity):
     print("Entity: " + entity.text)

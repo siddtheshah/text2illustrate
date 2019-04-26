@@ -25,12 +25,15 @@ HUGE_HEIGHT = 700
   
 
 class Offset:
-    # pos_x,y is a vector from the topleft corner of the image. 
+    # pos_x,y is a vector from the center of the image, as displayed in TkInter 
     # +x is right, +y is down
     def __init__(self, off_x, off_y, parent):
         self.off_x = off_x
         self.off_y = off_y
         self.parent = parent
+
+    def getXY(self):
+        return (self.off_x + self.parent.x, self.off_y + self.parent.y)
  
 class EntityImage():
     def __init__(self, cv2_image, width, height):
@@ -53,19 +56,20 @@ class EntityImage():
         #              X  X  X  X  X
         #                    X  
         #              X     X     X
-        self.center = Offset(self.width/2, self.height/2, self)
-        self.center_top = Offset(self.width/2, self.height/4, self)
-        self.top = Offset(self.width/2, 0, self)
-        self.top_left = Offset(0, 0, self)
-        self.top_right = Offset(self.width, 0, self)
-        self.left = Offset(0, self.height/2, self)
-        self.center_left = Offset(self.width/4, self.height/2, self)
-        self.center_right = Offset(self.width*3/4, self.height/2, self)
-        self.right = Offset(self.width, self.height/2, self)
-        self.center_bot = Offset(self.width/2, self.height*3/4, self)
-        self.bot_left = Offset(0, self.height, self)
-        self.bot = Offset(self.width/2, self.height, self)
-        self.bot_right = Offset(self.width, self.height, self)
+
+        self.center = Offset(0, 0, self)
+        self.center_top = Offset(0, -self.height/4, self)
+        self.top = Offset(0, -self.height/2, self)
+        self.top_left = Offset(-self.width/2, -self.height/2, self)
+        self.top_right = Offset(self.width/2, -self.height/2, self)
+        self.left = Offset(-self.width/2, 0, self)
+        self.center_left = Offset(-self.width/4, 0, self)
+        self.center_right = Offset(self.width/4, 0, self)
+        self.right = Offset(self.width/2, 0, self)
+        self.center_bot = Offset(0, self.height/4, self)
+        self.bot_left = Offset(-self.width/2, self.height/2, self)
+        self.bot = Offset(0, self.height/2, self)
+        self.bot_right = Offset(self.width/2, self.height/2, self)
 
     def __repr__(self):
         return '\n<\n\tx: {0}\n\ty: {1}\n\tlayer: {2}\n>'.format(
@@ -198,6 +202,14 @@ class AssetBook:
                     pass
             i += 1
         return None
+
+    # Debug method for animate, visualize
+    def attachSpecifiedImageToEntity(self, entity, image):
+        resized = cv2.resize(image, (SMALL_WIDTH, SMALL_HEIGHT))
+        pencil_image = sketchify(resized)
+
+        entity.eImage = EntityImage(pencil_image, SMALL_WIDTH, SMALL_HEIGHT)
+
 
 if __name__ == "__main__":
     # entity = Entity()

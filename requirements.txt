@@ -2,3 +2,7 @@ opencv-python
 numpy
 nltk
 spacy
+tkinter
+PIL
+mysql-connector-python
+scipy

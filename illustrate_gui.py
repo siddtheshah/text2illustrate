@@ -6,7 +6,6 @@ from threading import Lock, Thread
 from PIL import Image, ImageTk
 import numpy as np
 from highlightBoxNLP import HighlightSupportedNounsText
-from resettabletimer import ResettableTimer
 import cv2
 # import Queue
 

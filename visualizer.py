@@ -264,6 +264,20 @@ class Visualizer:
         self.animator.assignAnimations(entityList)
         return entityList
 
+    def ServeFileTitleAndMotion(self, textBody):
+        self.GetAssets(textBody)
+        ret = []
+        for entityList in self.visualScript:
+            self.ArrangeStaticScene(entityList)
+            self.ArrangeDynamicScene(entityList)
+            sublist = []
+            for entity in entityList:
+                if entity.eImage.image:
+                    sublist.append((entity.eImage.path, entity.eImage.animateFunc.eager()))
+            ret.append(sublist)
+        return ret
+
+
 def staticShow(entity):
     print("Entity: " + entity.text)
     if entity.eImage.image is None:

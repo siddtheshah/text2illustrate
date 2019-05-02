@@ -23,7 +23,7 @@ class Animator:
                 verbDict[bv].append([prep, obj])
             
             # assign action using this switch statement. 
-            # Ordered by priority. Specific stuff first, then general, then stationary.
+            # Ordered by priority. Specific stuff first, then general, then stationary
             func = None
             if verbDict["throw"]:
                 func = self.animate_throw
@@ -112,6 +112,14 @@ class Trajectory:
 
     def getDelta(self):
         return (self.xt - self.xt_old, self.yt - self.yt_old, self.ut)
+
+    def eager(self):
+        self.frameNumber = 0
+        ret = []
+        while self.frameNumber < self.frameTotal:
+            ret.append(self.next())
+            self.frameNumber += 1
+        return ret
 
     def next(self):
         pass

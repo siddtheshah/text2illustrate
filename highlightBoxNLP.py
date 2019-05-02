@@ -4,6 +4,8 @@ from tkinter import *
 from pathlib import Path
 from collections import defaultdict
 
+SPACY_NLP = spacy.load('en_core_web_sm')
+
 class HighlightSupportedNounsText(tk.Text):
     '''A text widget with a new method, highlight_pattern()
 
@@ -18,7 +20,7 @@ class HighlightSupportedNounsText(tk.Text):
     '''
     def __init__(self, *args, **kwargs):
         tk.Text.__init__(self, *args, **kwargs)
-        self.nlp = spacy.load('en_core_web_sm')
+        self.nlp = SPACY_NLP
         self.tag_configure("invalid", foreground="#FFFF00", background="#FF0000")
         self.tag_configure("nonspecFound", background="#44FF44")
         self.tag_configure("namedEnt", background="#FFFF00", foreground="#0000FF")
@@ -104,3 +106,29 @@ class HighlightSupportedNounsText(tk.Text):
             self.mark_set("matchEnd", "%s+%sc" % (index, count.get()))
             self.tag_add(tag, "matchStart", "matchEnd")
 
+class HighlightBoxRequestHandler:
+    def __init__(self):
+        self.nlp = SPACY_NLP
+
+    def handle(self, text):
+        highlights = []
+        doc = self.nlp(text)
+        ents = doc.ents
+        nps = defaultdict(list)
+        for np in doc.noun_chunks:
+            root = np.root
+            if root.pos_ == "PRON":
+                continue
+            start = root.idx
+            end = root.idx + len(root.text)
+            if np in doc.ents:
+                tag = "namedEnt"
+            else:
+                query = np.root.lemma_
+                count = self.checkSample(query)
+                if count > 0:
+                    tag = "nonspecFound"
+                else:
+                    tag = "invalid"
+            highlights.append((tag, start, end))
+        return highlights

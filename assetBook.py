@@ -36,7 +36,8 @@ class Offset:
         return (self.off_x + self.parent.x, self.off_y + self.parent.y)
  
 class EntityImage():
-    def __init__(self, cv2_image, width, height):
+    def __init__(self, cv2_image, width, height, path):
+        self.path = path
         # image stuff
         
         self.x = 0
@@ -153,22 +154,23 @@ class AssetBook:
     def attachImageToEntity(self, entity):
         # reads file from image folder whose name matches Entity.text
         if entity.text in self.reuse:
-            pencil_image, width, height = self.reuse[entity.text]
+            pencil_image, width, height, title = self.reuse[entity.text]
             print("Reusing " + entity.text)
         else:
             width, height = queryForSize(entity)
-            unprocessed = self.getRawImage(entity)
+            path, unprocessed = self.getRawImage(entity)
             if unprocessed is not None:
                 resized = cv2.resize(unprocessed, (width, height))
                 pencil_image = sketchify(resized)
                 # cv2.imshow("foo", pencil_image)
                 # cv2.waitKey(0)
-                self.reuse[entity.text] = (pencil_image, width, height)
+                self.reuse[entity.text] = (pencil_image, width, height, path)
             else:
                 pencil_image = None
                 width = 0
                 height = 0
-        entity.eImage = EntityImage(pencil_image, width, height)
+                path = ""
+        entity.eImage = EntityImage(pencil_image, width, height, path)
         # print(entity.eImage.image.shape[:2])
 
         # more complex logic for image retrieval
@@ -197,7 +199,7 @@ class AssetBook:
                 try:
                     ret = imread("images/" + file_title + str(i)  + ".png", cv2.IMREAD_UNCHANGED)
                     self.distinguishCounts[file_title] = i + 1
-                    return ret
+                    return (file_title, ret)
                 except:
                     pass
             i += 1

@@ -1,31 +1,28 @@
 <html>
     <head>
         Canvas testing
-        <script src="canvas/fabric.js"></script>
+        <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js'></script>
+        <script src='canvas/fabric.js'></script>
+        <script src='canvas/canvas.js'></script>
+        <script src='canvas/submit.js'></script>
+        <link rel="stylesheet" href="canvas/styles.css">
     </head>
-    <body>
-        <canvas id="c" width="500" height="500"></canvas>
-<!--         <script>
-            var canvas = new fabric.Canvas('c');
-
-            // create a rectangle object
-            var rect = new fabric.Rect({
-              left: 100,
-              top: 100,
-              fill: 'red',
-              width: 20,
-              height: 20
-            });
-
-            // "add" rectangle onto canvas
-            canvas.add(rect);
-            console.log("ran")
-        </script> -->
-        <script type = "text/javascript" 
-         src = "canvas/test.js">
-        render();
+    <div id=canvas>
+        <canvas id='main_canvas' width='800' height='600'></canvas>
+    </div>
+    <div>
+        <script type='text/javascript'>
+            var canvas = new fabric.Canvas('main_canvas', {backgroundColor : "#FFF"});
+            canvas.renderAll()
+            // addKilledImage(100, 100, 'images/dog0.png');
+            // addImage(canvas, 0, 0, 'images/dog1.png');
+            // canvas.clear();
         </script>
-
-
-    </body>
+        <form id='form1' method="post" role="form">
+            Input : <input type='text' name='input'><br>
+            <input type='button' value='Submit' id="submit_button">
+        </form>
+    </div>
+    <div id="output">
+    </div>
 </html>

@@ -7,21 +7,28 @@ import random
 class Animator:
     # for now, we won't split up the frametotal. This means all animations have duration
     # equal to the scene's.
-    def assignAnimation(self, entityList, frameTotal):
+    def assignAnimations(self, entityList, frameTotal):
         i = 0
+        backMap = {}
+        for entity in entityList:
+            backMap[entity.text] = entity
+
         while i < len(entityList):
             subj = entityList[i]
             verbDict = defaultdict(list)
 
             if subj.eImage.image is None:
                 subj.eImage.animateFunc = Stationary(subj.eImage, (0, 0), frameTotal)
+                i += 1
                 continue
             elif subj.eImage.animateFunc is not None:
+                i += 1
                 continue
 
             for bv, prep, obj in zip(subj.baseVerbs, subj.preps, subj.objs):
+                obj = backMap[obj.text] # 
                 verbDict[bv].append([prep, obj])
-            
+            # print(verbDict)
             # assign action using this switch statement. 
             # Ordered by priority. Specific stuff first, then general, then stationary
             func = None
@@ -38,6 +45,7 @@ class Animator:
             else:
                 func = self.animate_stationary
             func(subj, verbDict, frameTotal)
+            print("Animation assigned: " + subj.text)
             i += 1
 
     def animate_throw(self, subj, verbDict, frameTotal):
@@ -79,13 +87,14 @@ class Animator:
         for verb in endpointResolver.MOTION_SELF:
             goPairs.extend(verbDict[verb])
         prep, obj = goPairs[0]
+        print(obj)
         subj.eImage.animateFunc = GoOmniAlign(subj.eImage, obj.eImage, frameTotal)
 
     def animate_speak(self, subj, verbDict, frameTotal):
         speakPairs = []
         for verb in endpointResolver.SPEAK:
             speakPairs.extend(verbDict[verb])
-        prep, obj = goPairs[0]
+        prep, obj = speakPairs[0]
         subj.eImage.animateFunc = Jiggle(subj.eImage, frameTotal)
 
     def animate_stationary(self, subj, verbDict, frameTotal):
@@ -117,7 +126,7 @@ class Trajectory:
         self.frameNumber = 0
         ret = []
         while self.frameNumber < self.frameTotal:
-            ret.append(self.next())
+            ret.append(list(self.next()))
             self.frameNumber += 1
         return ret
 
@@ -258,25 +267,25 @@ if __name__ == "__main__":
     import cv2
     ast = AssetBook()
 
-    dog = Entity("dog")
-    dog.baseVerbs.append("leap")
-    dog.preps.append("to")
+    subj = Entity("man")
+    subj.baseVerbs.append("run")
+    subj.preps.append("")
     
-    store = Entity("store")
-    dog.objs.append(store)
+    obj = Entity("dog")
+    subj.objs.append(obj)
 
-    ast.attachSpecifiedImageToEntity(dog, cv2.imread("images/dog0.png", cv2.IMREAD_UNCHANGED))
-    ast.attachSpecifiedImageToEntity(store, cv2.imread("images/store0.png", cv2.IMREAD_UNCHANGED))
+    ast.attachSpecifiedImageToEntity(subj, "images/dog0.png")
+    ast.attachSpecifiedImageToEntity(obj, "images/store0.png")
 
-    dog.eImage.x = 0
-    dog.eImage.y = 400
+    subj.eImage.x = 0
+    subj.eImage.y = 400
 
-    store.eImage.x = 400
-    store.eImage.y = 400
+    obj.eImage.x = 400
+    obj.eImage.y = 400
 
-    entityList = [dog, store]
+    entityList = [subj, obj]
 
-    Animator().assignAnimation(entityList, 10000)
+    Animator().assignAnimations(entityList, 10000)
 
     class GUI(tk.Tk):
         def __init__(self):

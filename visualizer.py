@@ -4,12 +4,14 @@ import numpy as np
 from entity import *
 from script import *
 from assetBook import *
-import endpointResolver
-import animate
+from endpointResolver import *
+from animate import *
 from threading import Lock, Thread
 
-CANVAS_WIDTH = 1200
-CANVAS_HEIGHT = 800
+import sys
+
+CANVAS_WIDTH = 800
+CANVAS_HEIGHT = 600
 
 class StaticVisualGraph:
     class VisualNode:
@@ -64,6 +66,7 @@ class StaticVisualGraph:
         self.NodeToNodeOffsets()
         self.CreateIslands()
         self.ArrangeIslands()
+        print("SVG Done")
 
     def GetForwardRootsAndReverse(self):
         for node in self.nodeList:
@@ -165,15 +168,15 @@ class StaticVisualGraph:
                                     other.rootOffset = offset 
                                 # print("Other: " + other.entity.text)
                                 # print(other.rootOffset)
-                                if offset[0] < island.leftExtent:
-                                    island.leftExtent = offset[0]
-                                elif offset[0] > island.rightExtent:
-                                    island.rightExtent = offset[0]
+                                if offset[0] - other.entity.eImage.width/2 < island.leftExtent:
+                                    island.leftExtent = offset[0] - other.entity.eImage.width/2
+                                elif offset[0] + other.entity.eImage.width/2 > island.rightExtent:
+                                    island.rightExtent = offset[0] + other.entity.eImage.width/2
 
-                                if offset[1] < island.downExtent:
-                                    island.downExtent = offset[1]
-                                elif offset[1] > island.upExtent:
-                                    island.upExtent = offset[1] 
+                                if offset[1] - other.entity.eImage.height/2 < island.downExtent:
+                                    island.downExtent = offset[1] - other.entity.eImage.height/2
+                                elif offset[1] + other.entity.eImage.height/2 > island.upExtent:
+                                    island.upExtent = offset[1]  + other.entity.eImage.height/2
                                 toExplore.add(other)
 
     def HorizontalBounce(self):
@@ -183,12 +186,7 @@ class StaticVisualGraph:
         # Naive pack horizontally
         white_width = CANVAS_WIDTH - sum([island.getDimensions()[0] for island in self.islands])
         width_margin = white_width/(len(self.islands) + 1)
-        #filled_width = width_margin + sum([width_margin + island.getDimensions()[0] for island in self.islands])
-        # horizontal_unit = CANVAS_WIDTH/filled_width
-        # white_height = CANVAS_HEIGHT - max([island.getDimensions()[1] for island in self.islands])
-        # height_margin = white_height/(len(self.islands) + 1) 
-        # vertical_unit = CANVAS_HEIGHT/filled_height
-        
+
         grid_col = 0
         root_row = 2*CANVAS_HEIGHT/3 
         for island in self.islands:
@@ -199,6 +197,7 @@ class StaticVisualGraph:
                     node.entity.eImage.x = (root_col + node.rootOffset[0])
                     node.entity.eImage.y = (root_row - node.rootOffset[1])
                     node.entity.eImage.layer = node.rootOffset[2]
+                    print(node.entity.eImage)
             grid_col += island.getDimensions()[0]
         print("================ ARRANGED ISLANDS =====================")
         print(self.islands)
@@ -243,9 +242,8 @@ class Visualizer:
         # self.lock_.acquire()
         for entityList in self.visualScript:
             self.ArrangeStaticScene(entityList)
-            # self.ArrangeDynamicScene(entityList)
+            self.ArrangeDynamicScene(entityList)
             # print(entityList)
-
             callBackFunc(entityList) # Should add in asynchronous processing here
 
         # self.lock_.release()
@@ -261,7 +259,7 @@ class Visualizer:
     def ArrangeDynamicScene(self, entityList):
         # Creates animation objects from animate.py, uses them to parameterize functions
         # which are then attached to the imageEntities
-        self.animator.assignAnimations(entityList)
+        self.animator.assignAnimations(entityList, 500)
         return entityList
 
     def ServeFileTitleAndMotion(self, textBody):
@@ -272,8 +270,10 @@ class Visualizer:
             self.ArrangeDynamicScene(entityList)
             sublist = []
             for entity in entityList:
-                if entity.eImage.image:
-                    sublist.append((entity.eImage.path, entity.eImage.animateFunc.eager()))
+                if entity.eImage.image is not None:
+                    print(entity.eImage.path)
+                    size = (entity.eImage.width, entity.eImage.height)
+                    sublist.append((entity.eImage.path, entity.eImage.animateFunc.eager(), size))
             ret.append(sublist)
         return ret
 
@@ -290,8 +290,13 @@ def staticShowMultiple(entityList):
         staticShow(entity)
 
 if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        textBody = sys.argv[1]
+    else:
+        textBody = ("Jake was a policeman during his younger years.")
+
     v = Visualizer()
-    textBody = ("Jake was a policeman during his younger years.")
     v.DrawStoryWithCallback(textBody, staticShowMultiple)
+    # v.ServeFileTitleAndMotion(textBody)
     # textBody = "The cat sat near the man."
     # v.DrawStoryWithCallback(textBody, staticShowMultiple)

@@ -3,12 +3,15 @@ import nltk
 from nltk.corpus import wordnet as wn
 from nltk.stem import WordNetLemmatizer
 
+import sys
+
+
 # Verb Endpoints
 MOTION_SELF = ["run", "walk", "leap", "go", "move"]
 MOTION_OTHER = ["push", "pull", "carry", "throw"]
 STATIONARY = ["rest", "sit", "stand"]
 SPEAK = ["say", "scream", "whisper"]
-USAGE = ["use", "made", "destroy"]
+USAGE = ["use", "made", "destroy", "have"]
 REGARD = ["examine", "see"]
 BEING = ["is", "seem", "name"]
 
@@ -72,11 +75,15 @@ class EndpointResolver:
         return None
 
     def resolveWordToEndpointsLCH(self, word):
+        word = self.lemmatizer.lemmatize(word)
+        print(word)
         syns = wn.synsets(word)
         trimmedByPOS = list(filter(lambda x: x.pos() in self.pos, syns))
         max_sim = 0
         best_match = None
         for end in self.endpoints:
+            if word == end:
+                return end
             endSyns = wn.synsets(end)
             endTrimmed = list(filter(lambda x: x.pos() in self.pos, endSyns))
             for et in endTrimmed:
@@ -127,12 +134,15 @@ class AdjectiveResolver(EndpointResolver):
 
 if __name__ == "__main__":
     resolver = VerbResolver()
-    testWord = "made"
+    if len(sys.argv) > 1:
+        testWord = sys.argv[1]
+    else:
+        testWord = "fell"
 
     result1 = resolver.resolveWordToEndpointsBFS(testWord, 100)
     if result1:
         print("BFS: " + result1)
 
-    # result2 = resolver.resolveWordToEndpointsLCH(testWord)
-    # if result2:
-    #     print("LCH: " + result2)
+    result2 = resolver.resolveWordToEndpointsLCH(testWord)
+    if result2:
+        print("LCH: " + result2)

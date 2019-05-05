@@ -8,20 +8,20 @@ import collections
 import mysql.connector
 from mysql.connector import Error
 
-TINY_WIDTH = 100
-TINY_HEIGHT = 100
+TINY_WIDTH = 50
+TINY_HEIGHT = 50
 
-SMALL_WIDTH = 200
-SMALL_HEIGHT = 200
+SMALL_WIDTH = 100
+SMALL_HEIGHT = 100
 
-MEDIUM_WIDTH = 400
-MEDIUM_HEIGHT = 400
+MEDIUM_WIDTH = 200
+MEDIUM_HEIGHT = 200
 
-LARGE_WIDTH = 550
-LARGE_HEIGHT = 550
+LARGE_WIDTH = 300
+LARGE_HEIGHT = 300
 
-HUGE_WIDTH = 700
-HUGE_HEIGHT = 700
+HUGE_WIDTH = 400
+HUGE_HEIGHT = 400
   
 
 class Offset:
@@ -154,7 +154,7 @@ class AssetBook:
     def attachImageToEntity(self, entity):
         # reads file from image folder whose name matches Entity.text
         if entity.text in self.reuse:
-            pencil_image, width, height, title = self.reuse[entity.text]
+            pencil_image, width, height, path = self.reuse[entity.text]
             print("Reusing " + entity.text)
         else:
             width, height = queryForSize(entity)
@@ -199,18 +199,18 @@ class AssetBook:
                 try:
                     ret = imread("images/" + file_title + str(i)  + ".png", cv2.IMREAD_UNCHANGED)
                     self.distinguishCounts[file_title] = i + 1
-                    return (file_title, ret)
+                    return (str(file), ret)
                 except:
                     pass
             i += 1
         return None
 
     # Debug method for animate, visualize
-    def attachSpecifiedImageToEntity(self, entity, image):
+    def attachSpecifiedImageToEntity(self, entity, path):
+        image = imread(path, cv2.IMREAD_UNCHANGED)
         resized = cv2.resize(image, (SMALL_WIDTH, SMALL_HEIGHT))
         pencil_image = sketchify(resized)
-
-        entity.eImage = EntityImage(pencil_image, SMALL_WIDTH, SMALL_HEIGHT)
+        entity.eImage = EntityImage(pencil_image, SMALL_WIDTH, SMALL_HEIGHT, path)
 
 
 if __name__ == "__main__":

@@ -1,1 +1,1 @@
-<?php include_once("frontend.html"); ?>
+<?php header('Location: /frontend.html'); ?>

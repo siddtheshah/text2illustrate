@@ -2,7 +2,7 @@ opencv-python
 numpy
 nltk
 spacy
-PIL
+pillow
 mysql-connector-python
 scipy
 gunicorn

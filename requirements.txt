@@ -2,12 +2,11 @@ opencv-python
 numpy
 nltk
 spacy
-tkinter
 PIL
 mysql-connector-python
 scipy
 gunicorn
 flask
 flask-cors
-stanfordcorenlp
+
 

@@ -5,7 +5,7 @@ $(function () {
       console.log($('form').serialize());
       $.ajax({
         type: "POST",
-        url: 'http://localhost:3000/api/process_text',
+        url: 'http://localhost:5000/api/process_text',
         data: $('form').serialize(),
          success: function(result){
         console.log("Query returned");

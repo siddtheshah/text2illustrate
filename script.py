@@ -1,5 +1,5 @@
 
-from stanfordcorenlp import StanfordCoreNLP
+from stanfordcorenlpWrapper import StanfordCoreNLP
 from collections import defaultdict
 import spacy
 from spacy.lemmatizer import Lemmatizer

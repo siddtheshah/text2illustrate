@@ -188,7 +188,7 @@ class AssetBook:
                 else:
                     file_title = "man" # Blame language, not me.
                 return self.getImageIfThere(file_title)
-        return None
+        return None, None
 
     def getImageIfThere(self, file_title):
         i = self.distinguishCounts[file_title]
@@ -203,7 +203,7 @@ class AssetBook:
                 except:
                     pass
             i += 1
-        return None
+        return None, None
 
     # Debug method for animate, visualize
     def attachSpecifiedImageToEntity(self, entity, path):

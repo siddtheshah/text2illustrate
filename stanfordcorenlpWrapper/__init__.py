@@ -1,0 +1,1 @@
+from stanfordcorenlpWrapper.corenlp import StanfordCoreNLP

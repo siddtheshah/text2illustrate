@@ -52,11 +52,15 @@ Demo requirements:
         > Use Windows+G on VB window to begin a screen cap
         > Present to TAs
 
+VDB reqs:
+    > Construct new db from http://www.desiquintans.com/downloads/nounlist/nounlist.txt
+
 
 Project install plan:
     > Install Corenlp as a docker
     > Run it as docker on port 9000
     > Create a fork of python module stanfordcorenlp
+    > Add the vignet sql file and load that file into sql.
     > add that to git
     > add installation script.
         > apt install python3

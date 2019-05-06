@@ -18,7 +18,7 @@ class Animator:
             verbDict = defaultdict(list)
 
             if subj.eImage.image is None:
-                subj.eImage.animateFunc = Stationary(subj.eImage, (0, 0), frameTotal)
+                subj.eImage.animateFunc = Stationary(subj.eImage, frameTotal)
                 i += 1
                 continue
             elif subj.eImage.animateFunc is not None:
@@ -86,9 +86,11 @@ class Animator:
         goPairs = []
         for verb in endpointResolver.MOTION_SELF:
             goPairs.extend(verbDict[verb])
-        prep, obj = goPairs[0]
-        print(obj)
-        subj.eImage.animateFunc = GoOmniAlign(subj.eImage, obj.eImage, frameTotal)
+        while len(goPairs) > 0:
+            prep, obj = goPairs.pop(0)
+            if obj.eImage.image is not None:
+                subj.eImage.animateFunc = GoOmniAlign(subj.eImage, obj.eImage, frameTotal)
+                return
 
     def animate_speak(self, subj, verbDict, frameTotal):
         speakPairs = []

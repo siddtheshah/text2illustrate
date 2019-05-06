@@ -1,0 +1,8 @@
+{"copyright":"VigNet: Copyright 2003-2019 (c), WordsEye Inc",
+"data":[{"gfx.3d-size-of.r":{"entity":"obj-727-vp1003","real-world-size":150.0,"raw-dimensions":{"type":"vector.val","value":[112.20343,26.228603,152.92087]},"real-world-dims":{"type":"vector.val","value":[110.06029,25.727623,150.0]}}},
+{"gfx.3d-size-of.r":{"entity":"obj-a-6m_zero-vp24108","real-world-size":20.0,"raw-dimensions":{"type":"vector.val","value":[4.7104807,1.383032,3.52822]},"real-world-dims":{"type":"vector.val","value":[20.0,5.8721476,14.980298]}}},
+{"gfx.3d-size-of.r":{"entity":"obj-accordion-vp8764","real-world-size":2.0,"raw-dimensions":{"type":"vector.val","value":[0.999998,0.403614,0.403636]},"real-world-dims":{"type":"vector.val","value":[2.0,0.80722964,0.8072736]}}},
+{"gfx.3d-size-of.r":{"entity":"obj-acorn-vp8802","real-world-size":0.1,"raw-dimensions":{"type":"vector.val","value":[0.017304,0.025,0.017726]},"real-world-dims":{"type":"vector.val","value":[0.06921599,0.1,0.070903994]}}},
+{"gfx.3d-size-of.r":{"entity":"obj-agm-65d-vp24110","real-world-size":2.0,"raw-dimensions":{"type":"vector.val","value":[22.252136,22.082546,98.526596]},"real-world-dims":{"type":"vector.val","value":[0.45169806,0.44825554,2.0]}}},
+{"gfx.3d-size-of.r":{"entity":"obj-airbrush-vp14409","real-world-size":2.0,"raw-dimensions":{"type":"vector.val","value":[4.954466,18.604265,47.724335]},"real-world-dims":{"type":"vector.val","value":[0.20762849,0.7796553,2.0]}}},
+{"gfx.3d-size-of.r":{"entity":"obj-aircraft_hangar-vp11883","real-world-size":200.0,"raw-dimensions":{"type":"vector.val","value":[18.288,12.981007,38.2264]},"real-world-dims":{"type":"vector.val","value":[95.68256,67.91645,200.0]}}}]}

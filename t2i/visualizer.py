@@ -1,11 +1,11 @@
 import cv2
 import numpy as np
 
-from entity import *
-from script import *
-from assetBook import *
-from endpointResolver import *
-from animate import *
+from t2i.entity import *
+from t2i.script import *
+from t2i.assetBook import *
+from t2i.endpointResolver import *
+from t2i.animate import *
 from threading import Lock, Thread
 
 import sys

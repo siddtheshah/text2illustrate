@@ -1,14 +1,12 @@
 import tkinter as tk
 from tkinter import *
-import visualizer
+from t2i import *
 import time
 from threading import Lock, Thread
 from PIL import Image, ImageTk
 import numpy as np
-from highlightBoxNLP import HighlightSupportedNounsText
 import cv2
 # import Queue
-
 
 # DRAW_LOCK_ = Lock()
 # BUTTON_LOCK_ = Lock()

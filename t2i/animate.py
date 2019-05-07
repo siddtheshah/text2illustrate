@@ -1,5 +1,5 @@
-from entity import Entity
-import endpointResolver
+from t2i.entity import Entity
+import t2i.endpointResolver as endpointResolver
 import math
 from collections import defaultdict
 import random

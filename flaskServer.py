@@ -1,5 +1,5 @@
-from visualizer import *
-from highlightBoxNLP import *
+from t2i.visualizer import *
+from t2i.highlightBoxNLP import *
 from flask import Flask
 from flask_cors import CORS, cross_origin
 from flask import request
@@ -35,14 +35,5 @@ def process_text():
     print(text, file=sys.stderr)
 
     titlesAndMotion = visualizer.ServeFileTitleAndMotion(text)
-        # titlesAndMotion = [[("images/dog0.png", [(100, 100, 1), (90, 90, 1), (70, 70, 1)]), ("images/dog1.png", [(0, 0, 1), (10, 10, 1), (30, 30, 1)])], [("images/car0.png", [(100, 100, 1), (90, 90, 1), (70, 70, 1)]), ("images/car1.png", [(0, 0, 1), (10, 10, 1), (30, 30, 1)])]]
-        # mock_trajectory = []
-        # mock_trajectory2 = []
-        # for i in range(500):
-        #     mock_trajectory.append((i, i, 1))
-        #     mock_trajectory2.append((500 - i, 500 - i, 1))
-        # titlesAndMotion = [[("images/waiting1.png", mock_trajectory, (200, 200)), ("images/waiting1.png", mock_trajectory2, (200, 200))], [("images/waiting1.png", mock_trajectory, (200, 200)), ("images/waiting1.png", mock_trajectory2, (200, 200))]]
-        
-    # titlesAndMotion = [("mock", [(0, 0, 1), (0, 100, 1)])]
     return jsonify(titlesAndMotion)
 

@@ -4,8 +4,8 @@ from collections import defaultdict
 import spacy
 from spacy.lemmatizer import Lemmatizer
 from spacy.lang.en import LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES
-from entity import Entity
-from endpointResolver import *
+from t2i.entity import *
+from t2i.endpointResolver import *
 import re
 
 

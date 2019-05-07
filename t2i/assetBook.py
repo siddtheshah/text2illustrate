@@ -1,8 +1,8 @@
 import cv2
 import numpy as np
 from cv2 import imread
-from sketchify import sketchify
-from entity import Entity
+from t2i.sketchify import *
+from t2i.entity import *
 from pathlib import Path
 import collections
 import mysql.connector

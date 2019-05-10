@@ -45,7 +45,6 @@ class Animator:
             else:
                 func = self.animate_stationary
             func(subj, verbDict, frameTotal)
-            print("Animation assigned: " + subj.text)
             i += 1
 
         for entity in entityList:
@@ -54,20 +53,24 @@ class Animator:
 
 
     def animate_throw(self, subj, verbDict, frameTotal):
+        print("Animate throw triggered: " + subj.text)
         throwPairs = verbDict["throw"]
         endOffset = None
         prep = None
+        thrown  = None
         for prep, obj in throwPairs:
             if prep:
                 endOffset = obj.eImage.center
             else:
                 startOffset = obj.eImage.center
-        if not endOffset:
-            obj.eImage.animateFunc = Stationary(obj.eImage, frameTotal)
+                thrown = obj
+        if not endOffset or not thrown:
+            thrown.eImage.animateFunc = Stationary(obj.eImage, frameTotal)
             return
-        obj.eImage.animateFunc = Align(startOffset, endOffset, frameTotal)
+        thrown.eImage.animateFunc = Align(startOffset, endOffset, frameTotal)
 
     def animate_leap(self, subj, verbDict, frameTotal):
+        print("Animate leap triggered: " + subj.text)
         prep, obj = verbDict["leap"][0]
         startXY = (subj.eImage.x, subj.eImage.y)
         pivotXY = (obj.eImage.x, obj.eImage.y)
@@ -77,22 +80,25 @@ class Animator:
             subj.eImage.animateFunc = JumpOver(subj.eImage.center, obj.eImage.center, frameTotal)
 
     def animate_attach_go(self, subj, verbDict, frameTotal):
+        print("Animate attach_go triggered: " + subj.text)
         goPairs = []
         for verb in endpointResolver.MOTION_OTHER:
             goPairs.extend(verbDict[verb])
-        endOffset = None
+        end = None
         attached = None
         for prep, obj in goPairs:
             if prep:
                 end = obj
             else:
                 attached = obj.eImage
-        if endOffset:
+        if end:
+            print(end)
             subj.eImage.animateFunc = GoOmniAlign(subj.eImage, end.eImage, frameTotal)
         if attached:
             attached.animateFunc = AttachedMotion(attached.center, subj.eImage.center_right, frameTotal)
 
     def animate_go(self, subj, verbDict, frameTotal):
+        print("Animate go triggered: " + subj.text)
         goPairs = []
         for verb in endpointResolver.MOTION_SELF:
             goPairs.extend(verbDict[verb])
@@ -103,6 +109,7 @@ class Animator:
                 return
 
     def animate_speak(self, subj, verbDict, frameTotal):
+        print("Animate speak triggered: " + subj.text)
         speakPairs = []
         for verb in endpointResolver.SPEAK:
             speakPairs.extend(verbDict[verb])

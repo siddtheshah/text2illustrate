@@ -2,6 +2,7 @@
 import nltk
 from nltk.corpus import wordnet as wn
 from nltk.stem import WordNetLemmatizer
+from t2i.color import *
 
 import sys
 
@@ -16,8 +17,8 @@ REGARD = ["examine", "see"]
 BEING = ["is", "seem", "name"]
 
 # Adjective Endpoints
-SIZE = ["small", "big", "wide", "thin", "short"]
-COLOR = ["light", "dark", "colorful"]
+SIZE = ["small", "big", "wide", "thin", "short", "long"]
+COLOR = ["light", "dark", "colorful"] + list(CNAMES.keys())
 AGE = ["young", "old"]
 EMOTION = ["happy", "sad", "angry", "scared", "thoughtful"]
 VOLUME = ["loud", "quiet"]

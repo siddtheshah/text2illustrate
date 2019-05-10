@@ -28,6 +28,7 @@ function loadSceneImages(scene, sceneIndex) {
     // console.log("scene: ", scene)
     var images = [];
     var loadCount = 0;
+    var sizeMap = {}
     for (j = 0; j < scene.length; j++) {
         console.log("scene: ", j)
         imEntity = scene[j];
@@ -41,14 +42,21 @@ function loadSceneImages(scene, sceneIndex) {
         var width = imEntity[2][0];
         var height = imEntity[2][1];
 
+        sizeMap[url] = [width, height]
+
         fabric.Image.fromURL(url, function(oImg) {
           canvas.add(oImg);
           oImg.top = row;
           oImg.left = col;
           images.push(oImg);
           console.log("images : " , images);
+
+          width = sizeMap[oImg._element.attributes[0].value][0];
+          height = sizeMap[oImg._element.attributes[0].value][1];
+
           var xScale = width/oImg.width;
           var yScale = height/oImg.height;
+          console.log(width, height, oImg.width, oImg.height)
           oImg.set({scaleX : xScale, scaleY : yScale});
           loadCount++;
           // console.log("loadCount: ", loadCount);

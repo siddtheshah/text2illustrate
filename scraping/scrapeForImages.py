@@ -10,14 +10,15 @@ def main(file):
         json = {}
         json["keywords"] = noun
         json["limit"] = 7
-        json["suffix_keywords"] = "white background"
+        # json["suffix_keywords"] = "white background"
         json["output_directory"] = "download"
         json["image_directory"] = "all"
         json["format"] = "jpg"
         json["size"] = "icon"
         # json["extract_metadata"] = True
         paths = response.download(json)
-        key = noun + " white background"
+        #key = noun + " white background"
+        key = noun
         for count, imPath in enumerate(paths[key]):
             directory = os.path.dirname(imPath)
             if directory:

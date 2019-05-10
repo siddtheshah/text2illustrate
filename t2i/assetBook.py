@@ -3,10 +3,12 @@ import numpy as np
 from cv2 import imread
 from t2i.sketchify import *
 from t2i.entity import *
+from t2i.color import *
 from pathlib import Path
 import collections
 import mysql.connector
 from mysql.connector import Error
+import copy
 
 TINY_WIDTH = 80
 TINY_HEIGHT = 80
@@ -76,6 +78,68 @@ class EntityImage():
         return '\n<\n\tx: {0}\n\ty: {1}\n\tlayer: {2}\n>'.format(
             self.x, self.y, self.layer)
 
+def hex_to_bgr(hex):
+    h = hex.lstrip('#')
+    r, g, b = tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+    return b, g, r
+
+
+def queryForImage(entity):
+    noun = entity.text
+    ne_data = entity.ne_annotation
+    if 'type' in ne_data:
+        if ne_data['type'] == "PERSON":
+            if entity.ne_annotation['gender'] == "FEMALE":
+                noun = "woman"
+            else:
+                noun = "man" # Blame language, not me. 
+    """ Connect to MySQL database """
+    query = "SELECT path, ar, face_x, face_y, color_b, color_g, color_r FROM images WHERE name = %s"
+    args = [entity.text]
+    try:
+        conn = mysql.connector.connect(host='localhost',
+                                       database='text2illustrate',
+                                       user='public',
+                                       password='password')
+
+        # if conn.is_connected():
+        #     print('Connected to MySQL database')
+        cursor = conn.cursor()
+        cursor.execute(query, tuple(args))
+        rows = cursor.fetchall()
+        if not rows:
+            return None
+ 
+    except Error as e:
+        print(e)
+ 
+    finally:
+        cursor.close()
+        conn.close()
+
+    # This is wrapped in a try because sometimes data is missing and there's nothing you can do about it.
+    try:
+        best_row = None
+        if entity.adjectives:
+            adjective = entity.adjectives[0] # One shot.
+            if adjective in CNAMES:
+                b, g, r = hex_to_bgr(CNAMES[adjective])
+                best_row = min(rows, key=lambda x : abs(x[4] - b) + abs(x[5] - g) + abs(x[6] - r))
+            elif adjective in ["wide", "thin", "short", "long", "tall"]:
+                if adjective in ["wide", "short"]:
+                    best_row = min(rows, key=lambda x : x[1])
+                elif adjective in ["tall", "thin"]:
+                    best_row = max(rows, key=lambda x : x[1])
+                elif adjective == "long":
+                    best_row = max(rows, key=lambda x: x[1] if x[1] > 1 else 1/x[1])
+        if not best_row:
+            best_row = rows[0]
+        # print(best_row)
+        return best_row[0]
+
+    except:
+        return rows[0][0]
+
 
 def queryForSize(entity):
     noun = entity.text
@@ -110,7 +174,7 @@ def queryForSize(entity):
             median = np.median(vals)
         else:
             median = 3
-        print(median)
+        print("Size estimate for " + entity.text + " is " + str(median))
         quantized = sizeQuantizer(median)
 
         if "small" in entity.adjectives:
@@ -128,7 +192,7 @@ def queryForSize(entity):
         cursor.close()
         conn.close()
     quantized = [int(q) for q in quantized]
-    # print(quantized)
+    print(quantized)
     return tuple(quantized)
 
 def sizeQuantizer(sizeMetric):
@@ -158,7 +222,7 @@ class AssetBook:
             print("Reusing " + entity.text)
         else:
             width, height = queryForSize(entity)
-            path, unprocessed = self.getRawImage(entity)
+            path, unprocessed = self.getQueryImage(entity)
             if unprocessed is not None:
                 resized = cv2.resize(unprocessed, (width, height))
                 pencil_image = sketchify(resized)
@@ -174,6 +238,23 @@ class AssetBook:
         # print(entity.eImage.image.shape[:2])
 
         # more complex logic for image retrieval
+
+    def getQueryImage(self, entity):
+        result = queryForImage(entity)
+        if result is None:
+            if 'type' in entity.ne_annotation:
+                if entity.ne_annotation['type'] == "PERSON":
+                    retry = copy.deepcopy(entity)
+                    if retry.ne_annotation['gender'] == "FEMALE":
+                        retry.text = "woman"
+                    else:
+                        retry.text = "man" # Blame language, not me.
+                    result = queryForImage(retry)
+                    if result is None:
+                        return None, None
+        path = result
+        ret = imread(path, cv2.IMREAD_UNCHANGED)
+        return path, ret
 
     def getRawImage(self, entity):
     # Here we would make a request to a visual database.

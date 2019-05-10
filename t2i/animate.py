@@ -55,11 +55,16 @@ class Animator:
 
     def animate_throw(self, subj, verbDict, frameTotal):
         throwPairs = verbDict["throw"]
+        endOffset = None
+        prep = None
         for prep, obj in throwPairs:
             if prep:
                 endOffset = obj.eImage.center
             else:
                 startOffset = obj.eImage.center
+        if not endOffset:
+            obj.eImage.animateFunc = Stationary(obj.eImage, frameTotal)
+            return
         obj.eImage.animateFunc = Align(startOffset, endOffset, frameTotal)
 
     def animate_leap(self, subj, verbDict, frameTotal):

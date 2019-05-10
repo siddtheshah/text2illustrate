@@ -16,13 +16,14 @@ CORS(app, resources=r'/api/*')
 def checkRunning():
     return "Running!"
 
-@app.route('/api/highlight_input')
+@app.route('/api/highlight_input', methods=["POST"])
 def highlight_input():
+    print("Called!", file=sys.stderr)
     error = None
-    # highlightBoxHandler = HighlightBoxRequestHandler()
-    # text = request.form['input']
-    # highlights = highlightBoxHandler.handle(text)
-    highlights = [(0, 10, "red")]
+    highlightBoxHandler = HighlightBoxRequestHandler()
+    text = request.form['input']
+    print(text, file=sys.stderr)
+    highlights = highlightBoxHandler.handle(text)
     return jsonify(highlights)
 
 # this should return a large json consisting of filename + eager-executed trajectory.

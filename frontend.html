@@ -3,8 +3,10 @@
         Canvas testing
         <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js'></script>
         <script src='canvas/fabric.js'></script>
+        <script src='canvas/mark.js'></script>
         <script src='canvas/canvas.js'></script>
         <script src='canvas/submit.js'></script>
+        <script src='canvas/preview.js'></script>
         <link rel="stylesheet" href="canvas/styles.css">
     </head>
     <div id=canvas>
@@ -19,10 +21,12 @@
             // canvas.clear();
         </script>
         <form id='form1' method="post" role="form">
-            Input : <input type='text' name='input'><br>
+            Input : <textarea name='input' rows="4" cols="50" id=inp></textarea><br>
             <input type='button' value='Submit' id="submit_button">
+            <input type='button' value='Preview' id="preview_button">
         </form>
     </div>
-    <div id="output">
+    <div id="preview_result">
+        
     </div>
 </html>

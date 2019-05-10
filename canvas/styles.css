@@ -14,3 +14,24 @@ canvas {
     border: 1px solid #000;
     background-color: "White";
 }
+
+mark {
+	padding: 0;
+	background-color:yellow
+}
+
+mark.yellow {
+	padding: 0;
+	background-color:yellow
+}
+
+mark.green {
+	padding: 0;
+	background-color:green
+}
+
+mark.red {
+	padding: 0;
+	background-color:red
+}
+

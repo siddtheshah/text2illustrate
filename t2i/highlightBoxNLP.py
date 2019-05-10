@@ -55,7 +55,7 @@ class HighlightSupportedNounsText(tk.Text):
                 tag = "namedEnt"
             else:
                 query = np.root.lemma_
-                count = self.checkSample(query)
+                count = checkSample(query)
                 if count > 0:
                     tag = "nonspecFound"
                 else:
@@ -75,12 +75,7 @@ class HighlightSupportedNounsText(tk.Text):
 
 
     # Mock method. Replace with call to visual database.
-    def checkSample(self, query):
-        for i in range(5):
-            file = Path("images/" + query + str(i) + ".png")
-            if file.is_file():
-                return 1
-        return 0    
+
 
     def highlight_pattern(self, pattern, tag, start="1.0", end="end",
                           regexp=False):
@@ -122,13 +117,20 @@ class HighlightBoxRequestHandler:
             start = root.idx
             end = root.idx + len(root.text)
             if np in doc.ents:
-                tag = "namedEnt"
+                tag = "yellow" # namedEnt
             else:
                 query = np.root.lemma_
-                count = self.checkSample(query)
+                count = checkSample(query)
                 if count > 0:
-                    tag = "nonspecFound"
+                    tag = "green" # Found nonspc noun
                 else:
-                    tag = "invalid"
-            highlights.append((tag, start, end))
+                    tag = "red" # Noun does not exist in db
+            highlights.append((tag, np.root.text))
         return highlights
+
+def checkSample(query):
+    for i in range(5):
+        file = Path("images/" + query + str(i) + ".png")
+        if file.is_file():
+            return 1
+    return 0    

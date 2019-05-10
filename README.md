@@ -26,6 +26,15 @@ Basic animations added.
 
 Follow the pre-instructions in install.sh, and then run the script using bash.
 
+### Running Text2Illustrate
+
+Make sure Stanford NLP Server is running on port 9000
+
+Then run: gunicorn flaskServer:app -p 8000
+Which will create the python server to serve the text2illustrate html page.
+
+Open frontend.html using a browser, and try it out!
+
 ### Good examples:
 
 > The nimble rabbit jumped over the log. The fox turned and chased the chicken instead.

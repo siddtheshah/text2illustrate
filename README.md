@@ -4,9 +4,9 @@ text2illustrate is a program that seeks to take natural language and create a vi
 
 ### Status
 
-Currently able to accomplish static visualization
+Basic animations added.
 
-### Plan
+### Overview
 
 ![alt text][plan]
 
@@ -20,6 +20,11 @@ Currently able to accomplish static visualization
 - Vignet (from WordsEye)
 - OpenCV
 - Tkinter
+- FabricJS
+
+### Installation
+
+Follow the pre-instructions in install.sh, and then run the script using bash.
 
 ### Good examples:
 
@@ -34,3 +39,5 @@ Currently able to accomplish static visualization
 > Jerry brought his hammer to the store.
 
 > Bob dropped the wrench onto the floor. It made a loud clang, and Andy yelped in surprise. He then broke the window. Johnny sighed, grabbing the broom and dustpan.
+
+

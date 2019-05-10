@@ -9,6 +9,10 @@
 # CREATE DATABASE text2illustrate;
 # This will create a database that text2illustrate can load data into
 
+# Also set the following variable to your mysql username
+
+username=<YOUR USERNAME HERE>
+
 # Python dependencies
 pip install opencv-python
 pip install numpy
@@ -24,6 +28,17 @@ pip install flask-cors
 snap install docker
 docker run -itd -p 9000:9000 --name corenlp graham3333/corenlp-complete
 
+# Create images folder and turn them into transparent PNGs.
+unzip images.zip images
+./makePNGs.sh
+
 # Extra stuff
 python -m nltk.downloader wordnet
+
+# Database loading
+mysql -u $username -p text2illustrate < vignet/vignetSizes.sql
+mysql -u $username -p text2illustrate < databaseProcessing/imageIndex.sql
+
+
+
 

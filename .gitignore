@@ -1,1 +1,4 @@
 images/*
+scraping/download/*
+scraping/logs/*
+*__pycache__*

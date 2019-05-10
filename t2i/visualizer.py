@@ -197,7 +197,7 @@ class StaticVisualGraph:
                     node.entity.eImage.x = (root_col + node.rootOffset[0])
                     node.entity.eImage.y = (root_row - node.rootOffset[1])
                     node.entity.eImage.layer = node.rootOffset[2]
-                    print(node.entity.eImage)
+                    print("Entity: ", node.entity.text, node.entity.eImage)
             grid_col += island.getDimensions()[0]
         print("================ ARRANGED ISLANDS =====================")
         print(self.islands)
@@ -271,9 +271,9 @@ class Visualizer:
             sublist = []
             for entity in entityList:
                 if entity.eImage.image is not None:
-                    print(entity.eImage.path)
+                    print(entity.eImage.path, entity.eImage.layer)
                     size = (entity.eImage.width, entity.eImage.height)
-                    sublist.append((entity.eImage.path, entity.eImage.animateFunc.eager(), size))
+                    sublist.append((entity.eImage.path, entity.eImage.animateFunc.eager(), size, int(entity.eImage.layer)))
             ret.append(sublist)
         return ret
 

@@ -57,8 +57,18 @@ function loadSceneImages(scene, sceneIndex) {
              function animate(scene) {
                 var start = null;
                 var framesPassed = 0;
+
+                // Set drawing order based on layer
+                for (i = 0; i < scene.length; i++) {
+                    // console.log(scene[0][1].length);
+                    images[i]['layer'] = scene[i][3];
+                }
+                canvas._objects.sort(function (a, b) {return a['layer'] - b['layer'];});
+                console.log(canvas._objects);
+
                 function animateHelper() {
                     for (i = 0; i < scene.length; i++) {
+
                         // console.log(scene[0][1].length);
                         imEntity = scene[i];
                         var row = imEntity[1][framesPassed][1] - imEntity[2][0]/2;
@@ -67,7 +77,7 @@ function loadSceneImages(scene, sceneIndex) {
                         images[i].set({'top': row, 'left' : col, 'opacity' : u}).setCoords();
                     }
                     canvas.renderAll();
-                    if (framesPassed < scene[0][1].length - 1) {
+                    if (framesPassed < scene[0][1].length - 2) {
                         framesPassed++;
                         window.requestAnimationFrame(animateHelper);
                     } else {

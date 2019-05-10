@@ -9,12 +9,12 @@ def main(file):
     for noun in nounList:
         json = {}
         json["keywords"] = noun
-        json["limit"] = 2
+        json["limit"] = 7
         json["suffix_keywords"] = "white background"
         json["output_directory"] = "download"
         json["image_directory"] = "all"
         json["format"] = "jpg"
-        json["size"] = "medium"
+        json["size"] = "icon"
         # json["extract_metadata"] = True
         paths = response.download(json)
         key = noun + " white background"

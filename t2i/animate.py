@@ -48,6 +48,11 @@ class Animator:
             print("Animation assigned: " + subj.text)
             i += 1
 
+        for entity in entityList:
+            if not entity.eImage.animateFunc:
+                entity.eImage.animateFunc = Stationary(entity.eImage, frameTotal)
+
+
     def animate_throw(self, subj, verbDict, frameTotal):
         throwPairs = verbDict["throw"]
         for prep, obj in throwPairs:
@@ -80,7 +85,7 @@ class Animator:
         if endOffset:
             subj.eImage.animateFunc = GoOmniAlign(subj.eImage, end.eImage, frameTotal)
         if attached:
-            attached.animateFunc = AttachedMotion(attached, attached.center, subj.eImage.center_right, frameTotal)
+            attached.animateFunc = AttachedMotion(attached.center, subj.eImage.center_right, frameTotal)
 
     def animate_go(self, subj, verbDict, frameTotal):
         goPairs = []
@@ -139,13 +144,15 @@ class Trajectory:
 
 class AttachedMotion(Trajectory):
     def __init__(self, heldOffset, holderOffset, frameTotal):
-        super().__init__(self, heldOffset.parent, holderOffset.getXY(), holderOffset.getXY(), frameTotal)
+        self.heldOffset = heldOffset
+        self.holderOffset = holderOffset
         self.parent = holderOffset.parent
+        super().__init__(heldOffset.parent, (heldOffset.parent.x, heldOffset.parent.y), frameTotal)
 
     def next(self):
         self.frameNumber += 1
-        self.xt = self.parent.animateFunc.xt + holderOffset.off_x - heldOffset.off_x
-        self.yt = self.parent.animateFunc.yt + holderOffset.off_y - heldOffset.off_y
+        self.xt = self.parent.animateFunc.xt + self.holderOffset.off_x - self.heldOffset.off_x
+        self.yt = self.parent.animateFunc.yt + self.holderOffset.off_y - self.heldOffset.off_y
         self.ut = self.parent.animateFunc.ut
         return self.xt, self.yt, self.ut
 
@@ -254,8 +261,9 @@ class Jiggle(Trajectory):
         phaseRandomizationX = random.uniform(0, self.frameTotal)
         phaseRandomizationY = random.uniform(0, self.frameTotal)
         x0, y0 = self.startXY
-        self.xt = x0 + 10*math.sin(2*(self.frameNumber + phaseRandomizationX)/self.frameTotal*math.pi)
-        self.yt = y0 + 50*math.sin(2*(self.frameNumber + phaseRandomizationY)/self.frameTotal*math.pi)
+        self.xt = x0 + 10*math.sin((self.frameNumber + phaseRandomizationX)/self.frameTotal*math.pi/2)
+        self.yt = y0 + 30*math.sin((self.frameNumber + phaseRandomizationY)/self.frameTotal*math.pi/2)
+        self.frameNumber += 1
         return int(self.xt), int(self.yt), self.ut
 
 

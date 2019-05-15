@@ -1,0 +1,13 @@
+1. See video
+2. See section 2
+3. See section 2.2
+4. See section 2
+5. See section 3
+6. See section 4.4
+7. See video, section 4.4
+8. See all
+9. Added animations and visual database algorithms. Also wrote a new frontend in HTML and javascript, 
+plus improved the other algorithms in minor ways.
+10. See section 4.1, 4.2, 4.3
+11. See section 5.2
+12. See section 5.1

@@ -2,7 +2,8 @@
 
 text2illustrate is a program that seeks to take natural language and create a visual story using image composition. It accomplishes this by extracting entities and relationships from the text input.
 
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/3JWEpoO8me0/0.jpg)](https://www.youtube.com/watch?v=3JWEpoO8me0)
+Watch the demo:
+[![Click to watch demo](https://img.youtube.com/vi/3JWEpoO8me0/0.jpg)](https://www.youtube.com/watch?v=3JWEpoO8me0)
 
 ### Status
 
